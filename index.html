@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>promode</title>
+	<style type="text/css">
+		#promode {
+
+			font-family: Consolas;
+			position: fixed;
+			width: 500px;
+			height: 200px;
+			top: 50%;
+			left: 50%;
+			margin-top: -100px; 
+			margin-left: -250px; 
+		}
+
+		#promode input {
+			font-family: Consolas;			
+		}
+
+		#patterns {
+			border-radius: 8px;
+			background-color: #ccc;
+		}
+
+		.pattern {
+			color: #222;
+		}
+
+		.match {
+			color: green;
+		}
+	</style>
+</head>
+<body>
+	<div id="promode">
+		<div id="patterns">
+			<div class='pattern'><b>g</b>o to <b>c</b>ontract</div>
+			<div class='pattern match'>go to users</div>
+			<div class='pattern'>current trading partners</div>
+			<div class='pattern'>new contract</div>
+			<div class='pattern'>go to declarations</div>
+		</div>
+		<div style="">
+			<input type='text' />
+		</div>		
+	</div>
+</body>
+</html>
