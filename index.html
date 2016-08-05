@@ -32,6 +32,96 @@
 			color: green;
 		}
 	</style>
+		<script src="https://code.jquery.com/jquery-2.2.4.js" integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI=" crossorigin="anonymous"></script>
+	<script type="text/javascript">
+function pattern(s, path, params) { 
+	var re = /\$(\w{1})/g; 
+	var keys = s.match(re); 
+	var prefix = ""; 
+	var note = s; 
+
+	for (var i = 0; i < keys.length; i++) { 
+		var k = keys[i].slice(1, 2); 
+		prefix += k; 
+		note = note.replace(keys[i], '<b>' + k + '</b>'); 
+	} 
+
+	return { 
+	note: note, 
+	params: params, 
+	url: function(s, env) {
+			s = s.trim();
+			var kvs = []; 
+			var ps = s.split(' ');
+
+			if (ps[0] != prefix)
+				return null;
+
+			if (!params)
+				params = [];
+
+			for (var i = 1; i < ps.length; ++i) { 
+				var param = params.find(function(x) { return ps[i].startsWith(x.prefix); }); 
+
+				if (!param)
+					return null; 
+
+				kvs.push(param.name + '=' + ps[i].slice(1, ps[i].length)); 
+			}; 
+
+			return path + '?' + kvs.join('&'); 
+		}
+	}; 
+} 
+
+function param(s, pname) { 
+	var re = /\$(\w{1})/g; 
+	var keys = s.match(re); 
+	var prefix = ""; 
+	var note = s; 
+
+	for (var i = 0; i < keys.length; i++) { 
+		var k = keys[i].slice(1, 2); 
+		prefix += k; 
+		note = note.replace(keys[i], '<b>' + k + '</b>'); 
+	} 
+
+	return { 
+		prefix: prefix, 
+		name: pname 
+	}; 
+} 
+
+var patterns = [
+	pattern("go to $document $queue", '/Declarations', [param('filter by $contract name', "contractname") ]),
+	pattern("$add $contract", '/Contract/Add'),
+	pattern("$go to $mappings", "/Mapping"),
+	pattern("$go to $declarations", "/Declaration")
+];
+
+
+
+
+
+$(function() {
+	patterns.forEach(function(x) {
+		x.elem = 
+		$("#patterns").append('<div>' + x.note + '</div>');
+	});
+
+	ontype = function ontype(c) {
+		for (var i = 0; i < patterns.length; ++i) {
+			var url = patterns[i].url(c);
+			if (url) {
+				$("#urls").html('<div>' + url + '</div>');
+				return;
+			};
+		};
+		$("#urls").html("");
+	}
+});
+
+	</script>
 </head>
 <body>
 	<div id="promode">
@@ -42,9 +132,10 @@
 			<div class='pattern'>new contract</div>
 			<div class='pattern'>go to declarations</div>
 		</div>
-		<div style="">
-			<input type='text' />
-		</div>		
+		<div style="text-align: center">
+			<input type='text' oninput="ontype(this.value)" />
+		</div>	
+		<div id="urls"></div>	
 	</div>
 </body>
 </html>
