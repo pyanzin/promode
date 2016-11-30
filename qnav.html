@@ -63,11 +63,33 @@ function node(shortcut) {
   };
 }
 
-function orNode() {
-  
+function merge(node1, node2) {
+  return {
+    parsed: node1.parsed + node2.parsed,
+    modifiers: node1.modifiers.concat(node2.modifiers)
+  };
 }
 
-function andNode() {
+function orNode(orBody, thenBody) {
+  return {
+    traverse: function(pattern, position) {
+      var that = this;
+
+      var orResult = orBody.traverse(pattern, position);
+      if (orResult === null)
+        return null;
+
+      var thenResult = thenBody.traverse(pattern, position + orResult.parsed);
+
+      if (parsed === null)
+        return null;
+
+      return merge(orResult, thenResult);
+    }
+  };
+}
+
+function andNode(members) {
   
 }
 
@@ -203,6 +225,8 @@ function ontype (pattern) {
     var url = buildUrl(urlObj);
     qnav.url = url;
     $("#qnav-url").text(url);
+  } else {
+    $("#qnav-url").text("");
   };
  
 }
