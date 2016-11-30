@@ -1,0 +1,221 @@
+<!doctype html>
+<html>
+  <head>
+    <script   src="https://code.jquery.com/jquery-2.2.4.js"   integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="   crossorigin="anonymous"></script>
+    <style type="text/csss">
+      body * {
+        font-family: monospace;
+      }
+    </style>
+    <script type="text/javascript">
+function node(shortcut) { 
+  var re = /\$(\w{1})/g;
+  var keys = shortcut.match(re) || [];
+  var prefix = "";
+  var note = shortcut;
+
+  for (var i = 0; i < keys.length; i++) {
+      var k = keys[i].slice(1, 2);
+      prefix += k;
+      note = note.replace(keys[i], '<b>' + k + '</b>');
+  }
+
+  return {
+    children: [],
+    modifiers: [],
+    prefix: prefix,
+    match: function(pattern, position) {    
+      return pattern.startsWith(this.prefix, position);
+    },    
+    child: function(newChild) {
+      this.children.push(newChild);
+      return this;
+    },
+    modifier: function(newModifier) {
+      this.modifiers.push(newModifier);
+      return this;
+    },
+    traverse: function(pattern, position, result) {
+      var that = this;
+      var isMatch = this.match(pattern, position);
+      if (isMatch) {
+        this.modifiers.forEach(function(m) { m(result); });
+      } else {
+        return false;
+      };
+      var isChildrenMatch = (this.children.length == 0 || that.children.some(function(c) {
+        return c.traverse(pattern, position + that.prefix.length, result);
+      }));
+
+      if (isMatch && isChildrenMatch) {        
+        return true;
+      } else {
+        return false;
+      }
+    }
+  };
+}
+
+function orNode() {
+  
+}
+
+function andNode() {
+  
+}
+
+function freetype() {
+  return {
+    children: [],
+    modifiers: [],
+    match: function(pattern, position) {    
+      return pattern.substring(position);
+    },    
+    child: function(newChild) {
+      this.children.push(newChild);
+      return this;
+    },
+    modifier: function(newModifier) {
+      this.modifiers.push(newModifier);
+      return this;
+    },
+    traverse: function(pattern, position, result) {
+      var that = this;
+      var matchText = this.match(pattern, position);      
+      this.modifiers.forEach(function(m) { m(result, matchText); });
+      return true;
+    }
+  };
+}
+
+function set(prop, value) {
+  if (value === null)
+    return function(obj, value) {
+      obj[prop] = value;
+    };
+  else
+    return function(obj) {
+      obj[prop] = value;
+    };
+}
+
+function replace(prop, from, to) {
+  if (to === null)
+    return function(obj, to) {
+      obj[prop] = obj[prop].replace(from, to);
+    };
+  else
+    return function(obj) {
+      obj[prop] = obj[prop].replace(from, to);
+    }
+}
+
+function add(prop, key, value) {
+  if (value === null)
+    return function(obj, value) {
+      obj[prop] = obj[prop] || [];
+      obj[prop].push({k: key, v: value});
+    };
+  else
+    return function(obj) {
+      obj[prop] = obj[prop] || [];
+      obj[prop].push({k: key, v: value});
+    }
+}
+
+function buildUrl (obj) {
+  var url = obj.host;
+  if (obj.path)
+    url += "/" + obj.path;
+  if (obj.params.length)
+    url += "?" + obj.params.map(function(x) { return x.k + "=" + x.v; }).join("&");
+  if (obj.anchor && obj.anchor.length)
+    url += "#" + obj.anchor;
+
+  return url;
+}
+
+function emptyUrl() {
+  return {
+    host: "",
+    path: "",
+    params : [],
+    anchor: []
+  };
+}
+
+function toColor(s) {
+  var res = 0;
+  for (var i = 0; i < s.length; ++i) {
+    res ^= s.charCodeAt(i);
+  };
+
+  return res % 256;
+}
+
+var root = node("root")
+  .child(node("$music")
+    .child(node("$groove").modifier(set("host", "http://groovemp3.com"))
+      .child(node("$artist").modifier(set("path", "artist/{artist}"))
+        .child(freetype().modifier(replace("path", "{artist}", null)))))      
+    .child(node("$v$k").modifier(set("host", "https://vk.com")).modifier(set("path", "search")).modifier(add("params", "c%5Bsection%5D", "audio"))
+      .child(freetype().modifier(add("params", "q", null)))))
+  .child(node("$search")
+    .child(node("at $google").modifier(set("host", "http://google.com")).modifier(set("path", "search"))
+      .child(freetype().modifier(add("params", "q", null))))
+    .child(node("at yande$x").modifier(set("host", "http://yandex.ru")).modifier(set("path", "search"))
+      .child(freetype().modifier(add("params", "text", null))))
+    .child(node("at $youtube").modifier(set("host", "https://youtube.com")).modifier(set("path", "results"))
+      .child(freetype().modifier(add("params", "search_query", null))))
+    .child(node("$vk").modifier(set("host", "https://vk.com")).modifier(set("path", "search")).modifier(add("params", "c%5Bsection%5D", "auto"))
+      .child(freetype().modifier(add("params", "c%5Bq%5D", null)))))
+  .child(node("$t$ranslate").modifier(set("host", "http://translate.google.com")).modifier(set("anchor", "{from}/{to}/{text}"))
+    .child(node("from $russian").modifier(replace("anchor", "{from}", "ru"))
+      .child(node("to $english").modifier(replace("anchor", "{to}", "en"))
+        .child(freetype().modifier(replace("anchor", "{text}", null)))))
+    .child(freetype().modifier(replace("anchor", "{from}", "en")).modifier(replace("anchor", "{to}", "ru")).modifier(replace("anchor", "{text}", null))))
+  .child(node("$binder $cloud")
+    .child(node("$local").modifier(set("host", "http://bc.co.uk"))));
+
+var qnav = {};
+
+function ontype (pattern) {
+  var urlObj = emptyUrl();
+  root.traverse(pattern, 0, urlObj);
+  var url = buildUrl(urlObj);
+  qnav.url = url;
+  $("#qnav-url").text(url);
+}
+
+$(function() {
+  $('#qnav-input').keypress(function (e) {
+        if (e.which === 13 && qnav.url) {          
+          var win = window.open(qnav.url, '_blank');              
+        };
+  });
+  $("#qnav-input").focus();
+});
+    </script>
+  </head>
+  <body>
+  <input id="qnav-input" type="text" oninput="ontype(this.value)" />
+  <div id="qnav-url"></div>
+    <div>
+'$music'
+  '$groove' -> host('https://groovemp3.com')
+    '$artist' -> path('artist/{artist}')
+      freetype -> replace(path, '{artist}', _)
+    '$song' ->
+  '$v$k' -> 
+
+'$search'
+  'at $google' -> host('https://google.com') 
+  'at $yandex' -> host('https://yandex.ru')
+'$t$ranslate' -> {host('translate.google.com'); anchor('{from}/{to}/{text}')}
+  'from $russian' -> replace(anchor, '{from}', 'ru')
+    'to $english' -> replace(anchor, '{to}', 'en')
+
+  'from $english' -> replace(anchor, '{from}', 'en')
+    </div>
+  </body>
+</html>
