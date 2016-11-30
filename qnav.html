@@ -8,6 +8,8 @@
       }
     </style>
     <script type="text/javascript">
+
+
 function node(shortcut) { 
   var re = /\$(\w{1})/g;
   var keys = shortcut.match(re) || [];
@@ -35,23 +37,28 @@ function node(shortcut) {
       this.modifiers.push(newModifier);
       return this;
     },
-    traverse: function(pattern, position, result) {
+    traverse: function(pattern, position) {
       var that = this;
       var isMatch = this.match(pattern, position);
-      if (isMatch) {
-        this.modifiers.forEach(function(m) { m(result); });
-      } else {
-        return false;
-      };
-      var isChildrenMatch = (this.children.length == 0 || that.children.some(function(c) {
-        return c.traverse(pattern, position + that.prefix.length, result);
-      }));
+      if (!isMatch)
+        return null;
 
-      if (isMatch && isChildrenMatch) {        
-        return true;
-      } else {
-        return false;
-      }
+      if (this.children.length === 0)
+        return {
+          parsed: that.prefix.length,
+          modifiers: that.modifiers
+        };
+
+      for (var i = 0; i < that.children.length; ++i) {
+        var result = that.children[i].traverse(pattern, position + that.prefix.length);
+        if (result !== null)
+          return {
+            parsed: that.prefix.length + result.parsed,
+            modifiers: that.modifiers.concat(result.modifiers)
+          };
+      };
+
+      return null;
     }
   };
 }
@@ -68,7 +75,7 @@ function freetype() {
   return {
     children: [],
     modifiers: [],
-    match: function(pattern, position) {    
+    match: function(pattern, position) {
       return pattern.substring(position);
     },    
     child: function(newChild) {
@@ -79,11 +86,16 @@ function freetype() {
       this.modifiers.push(newModifier);
       return this;
     },
-    traverse: function(pattern, position, result) {
+    traverse: function(pattern, position) {
       var that = this;
-      var matchText = this.match(pattern, position);      
-      this.modifiers.forEach(function(m) { m(result, matchText); });
-      return true;
+      var matchText = this.match(pattern, position);
+
+      var newModifiers = that.modifiers.map(function(m) { return function(result) { m(result, matchText); }; });
+      
+      return {
+        parsed: matchText.length,
+        modifiers: newModifiers
+      }
     }
   };
 }
@@ -181,10 +193,18 @@ var qnav = {};
 
 function ontype (pattern) {
   var urlObj = emptyUrl();
-  root.traverse(pattern, 0, urlObj);
-  var url = buildUrl(urlObj);
-  qnav.url = url;
-  $("#qnav-url").text(url);
+  var result = root.traverse(pattern, 0);
+
+  if (result !== null) {
+    result.modifiers.forEach(function(m) {
+      m(urlObj);
+    });
+
+    var url = buildUrl(urlObj);
+    qnav.url = url;
+    $("#qnav-url").text(url);
+  };
+ 
 }
 
 $(function() {
