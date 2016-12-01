@@ -81,7 +81,7 @@ function orNode(orBody, thenBody) {
 
       var thenResult = thenBody.traverse(pattern, position + orResult.parsed);
 
-      if (parsed === null)
+      if (thenResult === null)
         return null;
 
       return merge(orResult, thenResult);
@@ -89,7 +89,7 @@ function orNode(orBody, thenBody) {
   };
 }
 
-function andNode(members) {
+function andNode(andBody, thenBody) {
   
 }
 
@@ -208,8 +208,7 @@ var root = node("root")
       .child(node("to $english").modifier(replace("anchor", "{to}", "en"))
         .child(freetype().modifier(replace("anchor", "{text}", null)))))
     .child(freetype().modifier(replace("anchor", "{from}", "en")).modifier(replace("anchor", "{to}", "ru")).modifier(replace("anchor", "{text}", null))))
-  .child(node("$binder $cloud")
-    .child(node("$local").modifier(set("host", "http://bc.co.uk"))));
+  ;
 
 var qnav = {};
 
