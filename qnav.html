@@ -11,7 +11,7 @@
 
 
 function node(shortcut) { 
-  var re = /\$(\w{1})/g;
+  var re = /\$([a-zA-Z\/]{1})/g;
   var keys = shortcut.match(re) || [];
   var prefix = "";
   var note = shortcut;
@@ -39,23 +39,27 @@ function node(shortcut) {
     },
     traverse: function(pattern, position) {
       var that = this;
+
+      if (pattern.length === position)
+        return parseResult();
+
       var isMatch = this.match(pattern, position);
       if (!isMatch)
         return null;
 
       if (this.children.length === 0)
-        return {
-          parsed: that.prefix.length,
-          modifiers: that.modifiers
-        };
+        return parseResult(
+          that.prefix.length,
+          that.modifiers
+        );
 
       for (var i = 0; i < that.children.length; ++i) {
         var result = that.children[i].traverse(pattern, position + that.prefix.length);
         if (result !== null)
-          return {
-            parsed: that.prefix.length + result.parsed,
-            modifiers: that.modifiers.concat(result.modifiers)
-          };
+          return merge(
+            parseResult(that.prefix.length, that.modifiers),
+            result
+          );
       };
 
       return null;
@@ -63,13 +67,22 @@ function node(shortcut) {
   };
 }
 
-function merge(node1, node2) {
+function parseResult(parsed, modifiers) {
   return {
-    parsed: node1.parsed + node2.parsed,
-    modifiers: node1.modifiers.concat(node2.modifiers)
+        parsed: parsed || 0,
+        modifiers: modifiers || []
+      };
+}
+
+// Merges two traversing results
+function merge(result1, result2) {
+  return {
+    parsed: result1.parsed + result2.parsed,
+    modifiers: result1.modifiers.concat(result2.modifiers)
   };
 }
 
+// Combinator node. Calls orBody node and if it returns result goes to thenBody.
 function orNode(orBody, thenBody) {
   return {
     traverse: function(pattern, position) {
@@ -89,8 +102,28 @@ function orNode(orBody, thenBody) {
   };
 }
 
+// Combinator node. Calls andBody node while it returns result or moves towards the pattern
 function andNode(andBody, thenBody) {
-  
+  return {
+    traverse: function(pattern, position) {
+      var that = this;
+      var andResult = parseResult();
+      while (true) {
+        result = andBody.traverse(pattern, position + andResult.parsed);
+        if (result !== null && result.parsed > 0)
+          andResult = merge(andResult, result);
+        else
+          break;
+      }
+
+      var thenResult = thenBody.traverse(pattern, position + andResult.parsed);
+
+      if (thenResult === null)
+        return null;
+
+      return merge(andResult, thenResult);
+    }
+  };
 }
 
 function freetype() {
@@ -114,10 +147,7 @@ function freetype() {
 
       var newModifiers = that.modifiers.map(function(m) { return function(result) { m(result, matchText); }; });
       
-      return {
-        parsed: matchText.length,
-        modifiers: newModifiers
-      }
+      return parseResult(matchText.length, newModifiers);
     }
   };
 }
@@ -174,7 +204,9 @@ function emptyUrl() {
     host: "",
     path: "",
     params : [],
-    anchor: []
+    anchor: [],
+    newWindow: false,
+    focus: false
   };
 }
 
@@ -187,11 +219,17 @@ function toColor(s) {
   return res % 256;
 }
 
-var root = node("root")
+var root = andNode(
+node("")
+  .child(node("new window and focus $/$/").modifier(set("focus", true)).modifier(set("newWindow", true)))
+  .child(node("new window $/").modifier(set("newWindow", true))),
+node("")  
   .child(node("$music")
     .child(node("$groove").modifier(set("host", "http://groovemp3.com"))
       .child(node("$artist").modifier(set("path", "artist/{artist}"))
-        .child(freetype().modifier(replace("path", "{artist}", null)))))      
+        .child(freetype().modifier(replace("path", "{artist}", null))))
+      .child(node("$search").modifier(set("path", "search/{text}"))
+        .child(freetype().modifier(replace("path", "{text}", null)))))      
     .child(node("$v$k").modifier(set("host", "https://vk.com")).modifier(set("path", "search")).modifier(add("params", "c%5Bsection%5D", "audio"))
       .child(freetype().modifier(add("params", "q", null)))))
   .child(node("$search")
@@ -208,7 +246,7 @@ var root = node("root")
       .child(node("to $english").modifier(replace("anchor", "{to}", "en"))
         .child(freetype().modifier(replace("anchor", "{text}", null)))))
     .child(freetype().modifier(replace("anchor", "{from}", "en")).modifier(replace("anchor", "{to}", "ru")).modifier(replace("anchor", "{text}", null))))
-  ;
+);
 
 var qnav = {};
 
@@ -223,6 +261,7 @@ function ontype (pattern) {
 
     var url = buildUrl(urlObj);
     qnav.url = url;
+    qnav.urlObj = urlObj;
     $("#qnav-url").text(url);
   } else {
     $("#qnav-url").text("");
@@ -232,9 +271,17 @@ function ontype (pattern) {
 
 $(function() {
   $('#qnav-input').keypress(function (e) {
-        if (e.which === 13 && qnav.url) {          
-          var win = window.open(qnav.url, '_blank');              
-        };
+     if (e.which === 13 && qnav.url) {
+        if (qnav.urlObj.newWindow) {
+            var win = window.open(qnav.url, '_blank');
+            if (qnav.urlObj.focus)
+              win.focus();
+        } else {
+            document.location.href = qnav.url;
+        }
+
+        //window.location.href = qnav.url;
+    };
   });
   $("#qnav-input").focus();
 });
