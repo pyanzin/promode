@@ -2,16 +2,41 @@
 <html>
   <head>
     <script   src="https://code.jquery.com/jquery-2.2.4.js"   integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="   crossorigin="anonymous"></script>
-    <style type="text/csss">
-      body * {
+    <style type="text/css">
+      body {
         font-family: monospace;
+      }
+
+      .node-passed {
+        padding: 8px;
+        border-radius: 8px;
+      }
+
+      .node-possible {
+        border-style: solid;
+        padding: 8px;
+        border-radius: 8px;
+      }
+
+      .key {
+        background-color: white;
+        padding: 2px 6px;
+        margin: 2px;
+        border-radius: 3px;
+        font-weight: bold;
       }
     </style>
     <script type="text/javascript">
 
+function addElement(elem, depth) {
+  return function(urlObj) {
+    urlObj.elements[depth] = urlObj.elements[depth] || [];
+    urlObj.elements[depth].push(elem);
+  }
+}
 
 function node(shortcut) { 
-  var re = /\$([a-zA-Z\/]{1})/g;
+  var re = /\$([a-zA-Z0-9\/]{1})/g;
   var keys = shortcut.match(re) || [];
   var prefix = "";
   var note = shortcut;
@@ -19,13 +44,15 @@ function node(shortcut) {
   for (var i = 0; i < keys.length; i++) {
       var k = keys[i].slice(1, 2);
       prefix += k;
-      note = note.replace(keys[i], '<b>' + k + '</b>');
+      note = note.replace(keys[i], '<span class="key">' + k + '</span>');
   }
 
   return {
     children: [],
     modifiers: [],
     prefix: prefix,
+    possibleElem: $('<span style="border-color: ' + toColor(shortcut) + '" class="node-possible">' + note + '</span>'),
+    passedElem: $('<span style="background-color: ' + toColor(shortcut) + '"  class="node-passed">' + note + '</span>'),
     match: function(pattern, position) {    
       return pattern.startsWith(this.prefix, position);
     },    
@@ -37,11 +64,11 @@ function node(shortcut) {
       this.modifiers.push(newModifier);
       return this;
     },
-    traverse: function(pattern, position) {
+    traverse: function(pattern, position, depth) {
       var that = this;
 
-      if (pattern.length === position)
-        return parseResult();
+      if (pattern.length < position)
+        return parseResult(0, [addElement(that.possibleElem, depth)]);      
 
       var isMatch = this.match(pattern, position);
       if (!isMatch)
@@ -50,14 +77,25 @@ function node(shortcut) {
       if (this.children.length === 0)
         return parseResult(
           that.prefix.length,
-          that.modifiers
+          that.modifiers.concat([addElement(that.passedElem, depth)])
         );
 
+      if (pattern.length === that.prefix.length + position) {
+        for (var i = 0; i < that.children.length; ++i) {
+          that.children[i].traverse(pattern, position + that.prefix.length, depth + that.prefix.length > 0 ? 1 : 0);
+        }
+
+        return parseResult(
+          that.prefix.length,
+          that.modifiers.concat([addElement(that.passedElem, depth)])
+        );
+      }
+
       for (var i = 0; i < that.children.length; ++i) {
-        var result = that.children[i].traverse(pattern, position + that.prefix.length);
+        var result = that.children[i].traverse(pattern, position + that.prefix.length, depth + that.prefix.length > 0 ? 1 : 0);
         if (result !== null)
           return merge(
-            parseResult(that.prefix.length, that.modifiers),
+            parseResult(that.prefix.length, that.modifiers.concat([addElement(that.passedElem, depth)])),
             result
           );
       };
@@ -85,14 +123,14 @@ function merge(result1, result2) {
 // Combinator node. Calls orBody node and if it returns result goes to thenBody.
 function orNode(orBody, thenBody) {
   return {
-    traverse: function(pattern, position) {
+    traverse: function(pattern, position, depth) {
       var that = this;
 
-      var orResult = orBody.traverse(pattern, position);
+      var orResult = orBody.traverse(pattern, position, depth);
       if (orResult === null)
         return null;
 
-      var thenResult = thenBody.traverse(pattern, position + orResult.parsed);
+      var thenResult = thenBody.traverse(pattern, position + orResult.parsed, depth + 1);
 
       if (thenResult === null)
         return null;
@@ -102,21 +140,21 @@ function orNode(orBody, thenBody) {
   };
 }
 
-// Combinator node. Calls andBody node while it returns result or moves towards the pattern
+// Combinator node. Calls andBody node while it returns result or moves towards the pattern and then goes to thenBody
 function andNode(andBody, thenBody) {
   return {
-    traverse: function(pattern, position) {
+    traverse: function(pattern, position, depth) {
       var that = this;
       var andResult = parseResult();
       while (true) {
-        result = andBody.traverse(pattern, position + andResult.parsed);
+        result = andBody.traverse(pattern, position + andResult.parsed, depth);
         if (result !== null && result.parsed > 0)
           andResult = merge(andResult, result);
         else
           break;
       }
 
-      var thenResult = thenBody.traverse(pattern, position + andResult.parsed);
+      var thenResult = thenBody.traverse(pattern, position + andResult.parsed, depth + 1);
 
       if (thenResult === null)
         return null;
@@ -141,7 +179,7 @@ function freetype() {
       this.modifiers.push(newModifier);
       return this;
     },
-    traverse: function(pattern, position) {
+    traverse: function(pattern, position, depth) {
       var that = this;
       var matchText = this.match(pattern, position);
 
@@ -206,7 +244,7 @@ function emptyUrl() {
     params : [],
     anchor: [],
     newWindow: false,
-    focus: false
+    elements: {}
   };
 }
 
@@ -216,13 +254,12 @@ function toColor(s) {
     res ^= s.charCodeAt(i);
   };
 
-  return res % 256;
+  return "hsla(" + res % 256 + ", 58%, 70%, 1)";
 }
 
 var root = andNode(
 node("")
-  .child(node("new window and focus $/$/").modifier(set("focus", true)).modifier(set("newWindow", true)))
-  .child(node("new window $/").modifier(set("newWindow", true))),
+  .child(node("new window and focus $/").modifier(set("newWindow", true))),
 node("")  
   .child(node("$music")
     .child(node("$groove").modifier(set("host", "http://groovemp3.com"))
@@ -250,9 +287,9 @@ node("")
 
 var qnav = {};
 
-function ontype (pattern) {
+function ontype(pattern) {
   var urlObj = emptyUrl();
-  var result = root.traverse(pattern, 0);
+  var result = root.traverse(pattern, 0, 0);
 
   if (result !== null) {
     result.modifiers.forEach(function(m) {
@@ -263,10 +300,25 @@ function ontype (pattern) {
     qnav.url = url;
     qnav.urlObj = urlObj;
     $("#qnav-url").text(url);
+
+    renderElemTree(urlObj.elements);
   } else {
     $("#qnav-url").text("");
   };
  
+}
+
+function renderElemTree(elementsObj) {
+  $("#tree").text("");
+  var i = 1;
+  var rowElements;
+  while(rowElements = elementsObj[i++]) {
+    var row = $("<div></div>");
+    for (var j = 0; j < rowElements.length; j++) {
+      row.append(rowElements[j]);
+    };
+    $("#tree").append(row);
+  }
 }
 
 $(function() {
@@ -290,7 +342,7 @@ $(function() {
   <body>
   <input id="qnav-input" type="text" oninput="ontype(this.value)" />
   <div id="qnav-url"></div>
-    <div>
+    <div id="defs">
 '$music'
   '$groove' -> host('https://groovemp3.com')
     '$artist' -> path('artist/{artist}')
@@ -307,5 +359,6 @@ $(function() {
 
   'from $english' -> replace(anchor, '{from}', 'en')
     </div>
+    <div id="tree"></div>
   </body>
 </html>
