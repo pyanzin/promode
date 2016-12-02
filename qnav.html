@@ -18,8 +18,17 @@
         border-radius: 8px;
       }
 
-      .key {
+      .node-possible .key {
         background-color: white;
+        padding: 2px 6px;
+        margin: 2px;
+        border-radius: 3px;
+        font-weight: bold;
+      }
+
+      .node-passed .key {
+        color: white;
+        background-color: black;
         padding: 2px 6px;
         margin: 2px;
         border-radius: 3px;
@@ -82,7 +91,7 @@ function node(shortcut) {
 
       if (pattern.length === that.prefix.length + position) {
         for (var i = 0; i < that.children.length; ++i) {
-          that.children[i].traverse(pattern, position + that.prefix.length, depth + that.prefix.length > 0 ? 1 : 0);
+          that.children[i].traverse(pattern, position + that.prefix.length + 1, depth );
         }
 
         return parseResult(
