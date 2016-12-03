@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <script   src="https://code.jquery.com/jquery-2.2.4.js"   integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="   crossorigin="anonymous"></script>
+    <script   src="jquery.js" crossorigin="anonymous"></script>
     <style type="text/css">
       body {
         font-family: monospace;
@@ -76,8 +76,9 @@ function node(shortcut) {
     traverse: function(pattern, position, depth) {
       var that = this;
 
-      if (pattern.length < position)
+      if (pattern.length < position) {
         return parseResult(0, [addElement(that.possibleElem, depth)]);      
+      }
 
       var isMatch = this.match(pattern, position);
       if (!isMatch)
@@ -90,14 +91,16 @@ function node(shortcut) {
         );
 
       if (pattern.length === that.prefix.length + position) {
+        var possibleResults = parseResult();
         for (var i = 0; i < that.children.length; ++i) {
-          that.children[i].traverse(pattern, position + that.prefix.length + 1, depth );
+          possibleResults = merge(possibleResults, that.children[i].traverse(pattern, position + that.prefix.length + 1, depth));
         }
 
-        return parseResult(
-          that.prefix.length,
-          that.modifiers.concat([addElement(that.passedElem, depth)])
-        );
+        return merge(parseResult(
+            that.prefix.length,
+            that.modifiers.concat([addElement(that.passedElem, depth)])
+          ),
+        possibleResults);
       }
 
       for (var i = 0; i < that.children.length; ++i) {
@@ -192,9 +195,12 @@ function freetype() {
       var that = this;
       var matchText = this.match(pattern, position);
 
-      var newModifiers = that.modifiers.map(function(m) { return function(result) { m(result, matchText); }; });
+      var mods = that.modifiers.map(function(m) { return function(result) { m(result, matchText); }; });
       
-      return parseResult(matchText.length, newModifiers);
+      var freetypeElement = $('<span style="background-color: ' + toColor("freetype") + '" class="node-passed">'+ matchText +'</span>');
+      var mods = mods.concat(addElement(freetypeElement, depth));
+
+      return parseResult(matchText.length, mods);
     }
   };
 }
@@ -269,7 +275,12 @@ function toColor(s) {
 var root = andNode(
 node("")
   .child(node("new window and focus $/").modifier(set("newWindow", true))),
-node("")  
+node("")
+  .child(node("$news")
+    .child(node("$yandex").modifier(set("host", "https://news.yandex.ru")))
+    .child(node("$bbc").modifier(set("host", "https://bbc.com")))
+    .child(node("$cnn").modifier(set("host", "https://cnn.com")))
+    .child(node("$rt").modifier(set("host", "https://rt.com"))))
   .child(node("$music")
     .child(node("$groove").modifier(set("host", "http://groovemp3.com"))
       .child(node("$artist").modifier(set("path", "artist/{artist}"))

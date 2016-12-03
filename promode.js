@@ -187,47 +187,58 @@ function ontypeNew(c) {
 
 $(function () {
     $('body').append($('\
-		<div id="promode" style="display: none"> \
-		<div>Environments:</div> \
-		<div id="qnav-hosts"> \
-		</div> \
-		<div>Paths:</div> \
-		<div id="qnav-paths"> \
-		</div> \
-		<div>Parameters:</div> \
-		<div id="qnav-params"> \
-		</div> \
-		<div style="text-align: center"> \
-			<input id="qnav-input" type="text" oninput="ontypeNew(this.value)" /> \
-		</div>			 \
-		<div id="qnav-url"></div> \
-		<div id="qnav-errors"></div>	 \
-	</div>'));
+        <div id="promode" style="display: none"> \
+        <div>Environments:</div> \
+        <div id="qnav-hosts"> \
+        </div> \
+        <div>Paths:</div> \
+        <div id="qnav-paths"> \
+        </div> \
+        <div>Parameters:</div> \
+        <div id="qnav-params"> \
+        </div> \
+        <div style="text-align: center"> \
+            <input id="qnav-input" type="text" oninput="ontypeNew(this.value)" /> \
+        </div>           \
+        <div id="qnav-url"></div> \
+        <div id="qnav-errors"></div>     \
+    </div>'));
 
     qnav = {};
 
-    qnav.hosts = [];
+    qnav.hosts = [
+        Host('$uat', 'https://uat.binder-cloud.com'),
+        Host('$production', 'https://uat.binder-cloud.com'),
+        Host('$test', 'https://test.binder-cloud.com'),
+        Host('$realtime', 'https://realtime.binder-cloud.com'),
+        Host('$local', 'http://bc.co.uk')
+    ];
 
     qnav.paths = [
-		Path('$contract$s', 'Contract', [
-			Param('filter by $name', 'name')
-		]),
+            Path('$contract$s', 'Contract', [
+                Param('filter by $name', 'name')
+            ]),
+    
+            Path('document $queue', 'DocumentQueue', [
+                Param('filter by $contract name', 'contractname'),
+                Param('filter by $document name', 'documentname')
+            ]),
+    
+            Path('go to $c$laims', 'Claim', [
+                Param('filter by $contract name', 'contract')
+            ]),
+    
+            Path('$new $contract', 'Contract/Add'),
+    
+            Path('go to $mapping$s', 'Mapping', [
+                Param('filter by $name', 'name')
+            ]),
+            Path('$new $mapping', 'Mapping/Add'),
 
-		Path('document $queue', 'DocumentQueue', [
-			Param('filter by $contract name', 'contractname'),
-			Param('filter by $document name', 'documentname')
-		]),
+        Path("$flexible $entities", "FlexibleEntity", [
+            Param("$name", "name")
+        ])
 
-		Path('go to $c$laims', 'Claim', [
-			Param('filter by $contract name', 'contract')
-		]),
-
-		Path('$new $contract', 'Contract/Add'),
-
-		Path('go to $mapping$s', 'Mapping', [
-			Param('filter by $name', 'name')
-		]),
-		Path('$new $mapping', 'Mapping/Add')
     ];
 
     for (var i = 0; i < qnav.hosts.length; i++) {
