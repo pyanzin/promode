@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <script   src="jquery.js" crossorigin="anonymous"></script>
+    <script src="jquery.js"></script>
     <style type="text/css">
       body {
         font-family: monospace;
@@ -9,12 +9,14 @@
 
       .node-passed {
         padding: 8px;
+        margin:2px;
         border-radius: 8px;
       }
 
       .node-possible {
         border-style: solid;
         padding: 8px;
+        margin:2px;
         border-radius: 8px;
       }
 
@@ -93,7 +95,7 @@ function node(shortcut) {
       if (pattern.length === that.prefix.length + position) {
         var possibleResults = parseResult();
         for (var i = 0; i < that.children.length; ++i) {
-          possibleResults = merge(possibleResults, that.children[i].traverse(pattern, position + that.prefix.length + 1, depth));
+          possibleResults = merge(possibleResults, that.children[i].traverse(pattern, position + that.prefix.length + 1, depth + 1));
         }
 
         return merge(parseResult(
