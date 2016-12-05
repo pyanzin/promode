@@ -39,6 +39,7 @@
     </style>
     <script type="text/javascript">
 
+// returns modifier which adds element at the passed depth
 function addElement(elem, depth) {
   return function(urlObj) {
     urlObj.elements[depth] = urlObj.elements[depth] || [];
@@ -46,6 +47,7 @@ function addElement(elem, depth) {
   }
 }
 
+// makes standard node from shortcut passed
 function node(shortcut) { 
   var re = /\$([a-zA-Z0-9\/]{1})/g;
   var keys = shortcut.match(re) || [];
@@ -119,6 +121,7 @@ function node(shortcut) {
   };
 }
 
+// returns parsing result
 function parseResult(parsed, modifiers) {
   return {
         parsed: parsed || 0,
@@ -183,6 +186,7 @@ function andNode(andBody, thenBody) {
   };
 }
 
+// makes freetype node which captures all the input from position to the end of string
 function freetype() {
   return {
     children: [],
@@ -212,6 +216,7 @@ function freetype() {
   };
 }
 
+// Makes modifier which sets the value for property. If value is not here, it should be passed on calling (required by freetype node)
 function set(prop, value) {
   if (value === null)
     return function(obj, value) {
@@ -223,6 +228,7 @@ function set(prop, value) {
     };
 }
 
+// Makes modifier which replaces substring in property
 function replace(prop, from, to) {
   if (to === null)
     return function(obj, to) {
@@ -234,6 +240,7 @@ function replace(prop, from, to) {
     }
 }
 
+// Makes modifier to add new element to the property of array type
 function add(prop, key, value) {
   if (value === null)
     return function(obj, value) {
@@ -247,7 +254,7 @@ function add(prop, key, value) {
     }
 }
 
-function buildUrl (obj) {
+function buildUrl(obj) {
   var url = obj.host;
   if (obj.path)
     url += "/" + obj.path;
@@ -310,34 +317,6 @@ node("")
       .child(node("to $english").modifier(replace("anchor", "{to}", "en"))
         .child(freetype().modifier(replace("anchor", "{text}", null)))))
     .child(freetype().modifier(replace("anchor", "{from}", "en")).modifier(replace("anchor", "{to}", "ru")).modifier(replace("anchor", "{text}", null))))
-  .child(node("$binder $cloud")
-    .child(
-      orNode(
-        node("")
-          .child(node("$local").modifier(set("host", "http://bc.co.uk")))
-          .child(node("$production").modifier(set("host", "https://production.binder-cloud.com")))
-          .child(node("$uat").modifier(set("host", "https://uat.binder-cloud.com")))
-          .child(node("$test").modifier(set("host", "https://test.binder-cloud.com")))
-          .child(node("$realtime").modifier(set("host", "https://realtime.binder-cloud.com"))),
-        node("")        
-          .child(node("$contract$s").modifier(set("path", "Contract"))
-            .child(node("$add").modifier(set("path", "Contract/Add")))
-            .child(
-              node("$name")
-                .child(freetype().modifier(add("params", "name", null))))
-          )
-          .child(node("$mappings").modifier(set("path", "Mapping"))
-            .child(node("$add").modifier(set("path", "Mapping/Add")))
-          )
-
-          .child(node("$document $queue").modifier(set("path", "DocumentQueue")))
-          .child(node("$flexible $entities").modifier(set("path", "FlexibleEntity")))
-      )
-    )
-  )
-  .child(node("$ji$ra").modifier(set("host", "http://bcteam.westeurope.cloudapp.azure.com:8080")).modifier(set("path", "secure/Dashboard.jspa"))
-    .child(node("$b$c").modifier(set("path", "browse/BC-{id}"))
-      .child(freetype().modifier(replace("path", "{id}", null)))))
 );
 
 var qnav = {};
