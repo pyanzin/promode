@@ -21,7 +21,7 @@
       }
 
       .node-possible .key {
-        background-color: white;
+        background-color: gray;
         padding: 2px 6px;
         margin: 2px;
         border-radius: 3px;
@@ -78,7 +78,7 @@ function node(shortcut) {
     traverse: function(pattern, position, depth) {
       var that = this;
 
-      if (pattern.length < position) {
+      if (pattern.length < position && prefix.length > 0) {
         return parseResult(0, [addElement(that.possibleElem, depth)]);      
       }
 
@@ -92,7 +92,7 @@ function node(shortcut) {
           that.modifiers.concat([addElement(that.passedElem, depth)])
         );
 
-      if (pattern.length === that.prefix.length + position) {
+      if (pattern.length <= that.prefix.length + position) {
         var possibleResults = parseResult();
         for (var i = 0; i < that.children.length; ++i) {
           possibleResults = merge(possibleResults, that.children[i].traverse(pattern, position + that.prefix.length + 1, depth + 1));
@@ -139,6 +139,11 @@ function orNode(orBody, thenBody) {
   return {
     traverse: function(pattern, position, depth) {
       var that = this;
+
+      debugger;
+      if (pattern.length <= position) {
+        return orBody.traverse(pattern, position + 1, depth);
+      }
 
       var orResult = orBody.traverse(pattern, position, depth);
       if (orResult === null)
@@ -259,7 +264,7 @@ function emptyUrl() {
     host: "",
     path: "",
     params : [],
-    anchor: [],
+    anchor: "",
     newWindow: false,
     elements: {}
   };
@@ -305,6 +310,34 @@ node("")
       .child(node("to $english").modifier(replace("anchor", "{to}", "en"))
         .child(freetype().modifier(replace("anchor", "{text}", null)))))
     .child(freetype().modifier(replace("anchor", "{from}", "en")).modifier(replace("anchor", "{to}", "ru")).modifier(replace("anchor", "{text}", null))))
+  .child(node("$binder $cloud")
+    .child(
+      orNode(
+        node("")
+          .child(node("$local").modifier(set("host", "http://bc.co.uk")))
+          .child(node("$production").modifier(set("host", "https://production.binder-cloud.com")))
+          .child(node("$uat").modifier(set("host", "https://uat.binder-cloud.com")))
+          .child(node("$test").modifier(set("host", "https://test.binder-cloud.com")))
+          .child(node("$realtime").modifier(set("host", "https://realtime.binder-cloud.com"))),
+        node("")        
+          .child(node("$contract$s").modifier(set("path", "Contract"))
+            .child(node("$add").modifier(set("path", "Contract/Add")))
+            .child(
+              node("$name")
+                .child(freetype().modifier(add("params", "name", null))))
+          )
+          .child(node("$mappings").modifier(set("path", "Mapping"))
+            .child(node("$add").modifier(set("path", "Mapping/Add")))
+          )
+
+          .child(node("$document $queue").modifier(set("path", "DocumentQueue")))
+          .child(node("$flexible $entities").modifier(set("path", "FlexibleEntity")))
+      )
+    )
+  )
+  .child(node("$ji$ra").modifier(set("host", "http://bcteam.westeurope.cloudapp.azure.com:8080")).modifier(set("path", "secure/Dashboard.jspa"))
+    .child(node("$b$c").modifier(set("path", "browse/BC-{id}"))
+      .child(freetype().modifier(replace("path", "{id}", null)))))
 );
 
 var qnav = {};
@@ -335,7 +368,7 @@ function renderElemTree(elementsObj) {
   var i = 1;
   var rowElements;
   while(rowElements = elementsObj[i++]) {
-    var row = $("<div></div>");
+    var row = $('<div class="treeLevel"></div>');
     for (var j = 0; j < rowElements.length; j++) {
       row.append(rowElements[j]);
     };
@@ -358,6 +391,7 @@ $(function() {
     };
   });
   $("#qnav-input").focus();
+  ontype("");
 });
     </script>
   </head>
