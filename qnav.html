@@ -143,7 +143,6 @@ function orNode(orBody, thenBody) {
     traverse: function(pattern, position, depth) {
       var that = this;
 
-      debugger;
       if (pattern.length <= position) {
         return orBody.traverse(pattern, position + 1, depth);
       }
@@ -371,13 +370,112 @@ $(function() {
   });
   $("#qnav-input").focus();
   ontype("");
+  parserState.source = $('#script').val();
+  parserState.position = 0;
+  parse();
 });
-    </script>
+
+function parse() {
+  parserState.position = 0;
+  parserState.source = $('#script').val();
+  var token;
+  while (token = getToken()) {
+    console.log(token.type + ' ' + token.value);
+  }
+}
+
+var STRING = 0,
+  ARROW = 1,
+  OPEN_PAREN = 2,
+  CLOSE_PAREN = 3,
+  OPEN_BRACE = 4,
+  CLOSE_BRACE = 5,
+  ID = 6,
+  TAB = 7,
+  UNDERSCORE = 8,
+  SEMICOLON = 9,
+  COMMA = 10;
+
+var parserState = {};
+
+function getNextChar() {
+  return parserState.source[parserState.position++];
+}
+
+function backtrack(i) {
+  parserState.position = parserState.position - i;
+}
+
+function getToken() {
+  var ch;
+  do {
+    ch = getNextChar();
+  } while (ch === ' ' || ch === '\t');
+
+  switch (ch) {
+    case '\'':
+      var str = '';
+      while ((ch = getNextChar()) !== '\'') {
+        str += ch;
+      }
+      return { type: STRING, value: str };
+
+    case '\n':
+      var tabCount = 0;
+
+      ch = getNextChar();
+
+      while (ch === ' ') {
+        ++tabCount;
+        ch = getNextChar();
+      }
+      backtrack(1);
+      return { type: TAB, value: tabCount };
+    case '-':
+      if (getNextChar() === '>')
+        return { type: ARROW };
+      else
+        return null;
+      break;
+
+    case '(':
+      return { type: OPEN_PAREN };
+    case ')':
+      return { type: CLOSE_PAREN };
+    case '{':
+      return { type: OPEN_BRACE };
+    case '}':
+      return { type: CLOSE_BRACE };
+    case '_':
+      return { type: UNDERSCORE };
+    case ';':
+      return { type: SEMICOLON };
+    case ',':
+      return { type: COMMA };    
+  }
+
+  if (ch >= 'A' && ch <= 'Z' || ch >= 'a' &&ch <= 'z') {
+    var id = '';
+    do {
+      id += ch;
+      ch = getNextChar();
+    } while (ch >= 'A' && ch <= 'Z' || ch >= 'a' &&ch <= 'z');
+
+    backtrack(1);
+    return { type: ID, value: id };
+  }
+
+  return null;
+
+}
+
+</script>
   </head>
   <body>
   <input id="qnav-input" type="text" oninput="ontype(this.value)" />
   <div id="qnav-url"></div>
     <div id="defs">
+      <textarea id="script" cols="120" rows="30">
 '$music'
   '$groove' -> host('https://groovemp3.com')
     '$artist' -> path('artist/{artist}')
@@ -388,11 +486,23 @@ $(function() {
 '$search'
   'at $google' -> host('https://google.com') 
   'at $yandex' -> host('https://yandex.ru')
-'$t$ranslate' -> {host('translate.google.com'); anchor('{from}/{to}/{text}')}
-  'from $russian' -> replace(anchor, '{from}', 'ru')
-    'to $english' -> replace(anchor, '{to}', 'en')
+'$t$ranslate' -> {host('https://translate.google.com'); anchor('{from}/{to}/{text}')}
+  or
+    'from $russian' -> replace(anchor, '{from}', 'ru')
+    'from $english' -> replace(anchor, '{from}', 'en')
+    'from $spanish' -> replace(anchor, '{from}', 'es')
+    'from $german' -> replace(anchor, '{from}', 'de')
+  then
+    or
+      'to $russian' -> replace(anchor, '{to}', 'ru')
+      'to $english' -> replace(anchor, '{to}', 'en')
+      'to $spanish' -> replace(anchor, '{to}', 'es')
+      'to $german' -> replace(anchor, '{to}', 'de')
+    then
+      freetype -> replace(anchor, '{text}', _)
+  freetype -> {replace(anchor, '{from}', 'en'); replace(anchor, '{to}', 'ru'); replace(anchor, '{text}', _)}
+</textarea>
 
-  'from $english' -> replace(anchor, '{from}', 'en')
     </div>
     <div id="tree"></div>
   </body>
