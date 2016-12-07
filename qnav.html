@@ -316,6 +316,34 @@ node("")
       .child(node("to $english").modifier(replace("anchor", "{to}", "en"))
         .child(freetype().modifier(replace("anchor", "{text}", null)))))
     .child(freetype().modifier(replace("anchor", "{from}", "en")).modifier(replace("anchor", "{to}", "ru")).modifier(replace("anchor", "{text}", null))))
+  .child(node("$binder $cloud")
+    .child(
+      orNode(
+        node("")
+          .child(node("$local").modifier(set("host", "http://bc.co.uk")))
+          .child(node("$production").modifier(set("host", "https://production.binder-cloud.com")))
+          .child(node("$uat").modifier(set("host", "https://uat.binder-cloud.com")))
+          .child(node("$test").modifier(set("host", "https://test.binder-cloud.com")))
+          .child(node("$realtime").modifier(set("host", "https://realtime.binder-cloud.com"))),
+        node("")        
+          .child(node("$contract$s").modifier(set("path", "Contract"))
+            .child(node("$add").modifier(set("path", "Contract/Add")))
+            .child(
+              node("$name")
+                .child(freetype().modifier(add("params", "name", null))))
+          )
+          .child(node("$mappings").modifier(set("path", "Mapping"))
+            .child(node("$add").modifier(set("path", "Mapping/Add")))
+          )
+
+          .child(node("$document $queue").modifier(set("path", "DocumentQueue")))
+          .child(node("$flexible $entities").modifier(set("path", "FlexibleEntity")))
+      )
+    )
+  )
+  .child(node("$ji$ra").modifier(set("host", "http://bcteam.westeurope.cloudapp.azure.com:8080")).modifier(set("path", "secure/Dashboard.jspa"))
+    .child(node("$b$c").modifier(set("path", "browse/BC-{id}"))
+      .child(freetype().modifier(replace("path", "{id}", null)))))
 );
 
 var qnav = {};
@@ -384,6 +412,24 @@ function parse() {
   }
 }
 
+var depth = 0;
+
+function standard() {
+  var startPosition = getPosition();
+
+  var shortcut = string();
+  var isArrow = arrow();
+
+  var modifiers;
+  if (isArrow) {
+    modifiers = mods();
+  } else {
+    modifiers = [];
+  }
+
+  
+}
+
 var STRING = 0,
   ARROW = 1,
   OPEN_PAREN = 2,
@@ -402,8 +448,16 @@ function getNextChar() {
   return parserState.source[parserState.position++];
 }
 
-function backtrack(i) {
-  parserState.position = parserState.position - i;
+function backtrack(n) {
+  parserState.position = parserState.position - n;
+}
+
+function backtractTo(n) {
+  parserState.position = n;
+}
+
+function getPosition() {
+  return parserState.position;
 }
 
 function getToken() {
@@ -454,12 +508,12 @@ function getToken() {
       return { type: COMMA };    
   }
 
-  if (ch >= 'A' && ch <= 'Z' || ch >= 'a' &&ch <= 'z') {
+  if (ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z') {
     var id = '';
     do {
       id += ch;
       ch = getNextChar();
-    } while (ch >= 'A' && ch <= 'Z' || ch >= 'a' &&ch <= 'z');
+    } while (ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z');
 
     backtrack(1);
     return { type: ID, value: id };
@@ -501,7 +555,7 @@ function getToken() {
     then
       freetype -> replace(anchor, '{text}', _)
   freetype -> {replace(anchor, '{from}', 'en'); replace(anchor, '{to}', 'ru'); replace(anchor, '{text}', _)}
-</textarea>
+      </textarea>
 
     </div>
     <div id="tree"></div>
