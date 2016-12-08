@@ -372,34 +372,25 @@ $(function() {
   ontype("");
   parserState.source = $('#script').val();
   parserState.position = 0;
-  parse();
+  //parse();
 });
 
 function parse() {
   parserState.position = 0;
   parserState.source = $('#script').val();
-  var token;
-  while (token = getToken()) {
-    console.log(token.type + ' ' + token.value);
-  }
-}
 
-var depth = 0;
+  var rootNode = node("");
+  var newNode = standard(true);
+  rootNode.child(newNode);
+  while (newNode = standard());
+    rootNode.child(newNode);
 
-function standard() {
-  var startPosition = getPosition();
+  root = rootNode;
 
-  var shortcut = string();
-  var isArrow = arrow();
-
-  var modifiers;
-  if (isArrow) {
-    modifiers = mods();
-  } else {
-    modifiers = [];
-  }
-
-
+  //var token;
+  //while (token = getToken()) {
+  //  console.log(token.type + ' ' + token.value);
+  //}
 }
 
 var STRING = 0,
@@ -414,6 +405,156 @@ var STRING = 0,
   SEMICOLON = 9,
   COMMA = 10;
 
+function standard(start) {
+  var currentTab = start ? 0 : tab();
+
+  var startPosition = getPosition();
+
+  var shortcut = string();
+
+  if (!shortcut)
+    return null;
+
+  var isArrow = arrow();
+
+  var modifiers;
+  if (isArrow) {
+    modifiers = mods();
+  } else {
+    modifiers = [];
+  }
+
+  var preTabPosition = getPosition();
+  var nextTab = tab();
+  backtrackTo(preTabPosition);
+
+  var newNode = node(shortcut);
+
+  for (var i = 0; i < modifiers.length; i++) {
+    newNode.modifier(modifiers[i]);
+  };
+
+  while (nextTab - currentTab === 2) {
+    newNode.child(standard());
+    var preTabPosition = getPosition();
+    var nextTab = tab();
+    backtrackTo(preTabPosition);
+  };
+
+  return newNode;
+}
+
+function mods() {
+  var isBrace = openBrace();
+
+  var newModifiers = [];
+
+  if (isBrace) {
+    while (true) {
+      var newMod = modifier();
+      var semicol = semicolon();
+      if (!newMod) {
+        closeBrace();
+        return newModifiers;
+      } else {
+        newModifiers.push(newMod);
+      }
+    }
+  } else {
+    return [modifier()];
+  }
+}
+
+function modifier() {
+  var identifier = id();
+  if (identifier === null) 
+    return null;
+
+  switch (identifier) {
+    case 'host':
+      openParen();
+      var str = string();
+      closeParen();
+      return set('host', str);
+
+    case 'path':
+      openParen();
+      var str = string();
+      closeParen();
+      return set('path', str);
+
+    case 'anchor':
+      openParen();
+      var str = string();
+      closeParen();
+      return set('anchor', str);
+
+    case 'param':
+      openParen();
+      var prop = string();
+      comma();
+      var value = string();
+      if (!value && underscore()) {
+        value = null;
+      };
+      closeParen();
+      return add(prop, value);
+
+    case 'replace':
+      openParen();
+      var prop = id();
+      comma();
+      var fromStr = string();
+      comma();
+      var toStr = string();
+      if (!toStr && underscore())
+        var toStr = null;
+      return replace(prop, fromStr, toStr);
+  }
+
+  return null;
+}
+
+var comma = makeBool(COMMA);
+var openParen = makeBool(OPEN_PAREN);
+var closeParen = makeBool(CLOSE_PAREN);
+var id = makeValue(ID);
+var openBrace = makeBool(OPEN_BRACE);
+var closeBrace = makeBool(CLOSE_BRACE);
+var string = makeValue(STRING);
+var arrow = makeBool(ARROW);
+var tab = makeValue(TAB);
+var underscore = makeBool(UNDERSCORE);
+var semicolon = makeBool(SEMICOLON);
+
+function makeBool(type) {
+  return function() {
+    var startPosition = getPosition();
+    var token = getToken();
+
+    if (token.type !== type) {
+      backtrackTo(startPosition);
+      return false;
+    } else {
+      return true;
+    }
+  }
+}
+
+function makeValue(type) {
+  return function() {
+    var startPosition = getPosition();
+    var token = getToken();
+
+    if (token === null || token.type !== type) {
+      backtrackTo(startPosition);
+      return null;
+    } else {
+      return token.value;
+    }
+  }
+}
+
 var parserState = {};
 
 function getNextChar() {
@@ -424,7 +565,7 @@ function backtrack(n) {
   parserState.position = parserState.position - n;
 }
 
-function backtractTo(n) {
+function backtrackTo(n) {
   parserState.position = n;
 }
 
