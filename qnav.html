@@ -285,39 +285,6 @@ function toColor(s) {
   return "hsla(" + res % 256 + ", 58%, 70%, 1)";
 }
 
-var root = andNode(
-node("")
-  .child(node("new window and focus $/").modifier(set("newWindow", true))),
-node("")
-  .child(node("$news")
-    .child(node("$yandex").modifier(set("host", "https://news.yandex.ru")))
-    .child(node("$bbc").modifier(set("host", "https://bbc.com")))
-    .child(node("$cnn").modifier(set("host", "https://cnn.com")))
-    .child(node("$rt").modifier(set("host", "https://rt.com"))))
-  .child(node("$music")
-    .child(node("$groove").modifier(set("host", "http://groovemp3.com"))
-      .child(node("$artist").modifier(set("path", "artist/{artist}"))
-        .child(freetype().modifier(replace("path", "{artist}", null))))
-      .child(node("$search").modifier(set("path", "search/{text}"))
-        .child(freetype().modifier(replace("path", "{text}", null)))))      
-    .child(node("$v$k").modifier(set("host", "https://vk.com")).modifier(set("path", "search")).modifier(add("params", "c%5Bsection%5D", "audio"))
-      .child(freetype().modifier(add("params", "q", null)))))
-  .child(node("$search")
-    .child(node("at $google").modifier(set("host", "http://google.com")).modifier(set("path", "search"))
-      .child(freetype().modifier(add("params", "q", null))))
-    .child(node("at yande$x").modifier(set("host", "http://yandex.ru")).modifier(set("path", "search"))
-      .child(freetype().modifier(add("params", "text", null))))
-    .child(node("at $youtube").modifier(set("host", "https://youtube.com")).modifier(set("path", "results"))
-      .child(freetype().modifier(add("params", "search_query", null))))
-    .child(node("$vk").modifier(set("host", "https://vk.com")).modifier(set("path", "search")).modifier(add("params", "c%5Bsection%5D", "auto"))
-      .child(freetype().modifier(add("params", "c%5Bq%5D", null)))))
-  .child(node("$t$ranslate").modifier(set("host", "http://translate.google.com")).modifier(set("anchor", "{from}/{to}/{text}"))
-    .child(node("from $russian").modifier(replace("anchor", "{from}", "ru"))
-      .child(node("to $english").modifier(replace("anchor", "{to}", "en"))
-        .child(freetype().modifier(replace("anchor", "{text}", null)))))
-    .child(freetype().modifier(replace("anchor", "{from}", "en")).modifier(replace("anchor", "{to}", "ru")).modifier(replace("anchor", "{text}", null))))
-);
-
 var qnav = {};
 
 function ontype(pattern) {
@@ -369,6 +336,7 @@ $(function() {
     };
   });
   $("#qnav-input").focus();
+  parse();  
   ontype("");
   parserState.source = $('#script').val();
   parserState.position = 0;
@@ -380,9 +348,9 @@ function parse() {
   parserState.source = $('#script').val();
 
   var rootNode = node("");
-  var newNode = standard(true);
+  var newNode = parseNode(true);
   rootNode.child(newNode);
-  while (newNode = standard());
+  while (newNode = parseNode())
     rootNode.child(newNode);
 
   root = rootNode;
@@ -405,10 +373,35 @@ var STRING = 0,
   SEMICOLON = 9,
   COMMA = 10;
 
-function standard(start) {
+function parseNode(start) {  
+  var startPosition = getPosition();  
   var currentTab = start ? 0 : tab();
 
-  var startPosition = getPosition();
+  var str = string();
+
+  if (str) {
+    backtrackTo(startPosition);
+    return standard(start);
+  }
+
+  var identifier = id();
+
+  if (identifier === 'freetype') {
+    backtrackTo(startPosition);
+    return parseFreeTypeNode(start);
+  } else if (identifier === 'or') {
+    backtrackTo(startPosition);    
+    return parseOrNode(start);
+  } else if (identifier === 'and') {
+    backtrackTo(startPosition);    
+    return parseAndNode(start);
+  }
+
+  return null;
+}
+
+function standard(start) {
+  var currentTab = start ? 0 : tab();
 
   var shortcut = string();
 
@@ -435,13 +428,136 @@ function standard(start) {
   };
 
   while (nextTab - currentTab === 2) {
-    newNode.child(standard());
+    newNode.child(parseNode());
     var preTabPosition = getPosition();
     var nextTab = tab();
     backtrackTo(preTabPosition);
   };
 
   return newNode;
+}
+
+function parseFreeTypeNode(start) {
+  var currentTab = start ? 0 : tab();
+
+  var identifier = id();
+
+  if (identifier !== 'freetype')
+    return null;
+
+  var isArrow = arrow();
+
+  var modifiers;
+  if (isArrow) {
+    modifiers = mods();
+  } else {
+    modifiers = [];
+  }
+
+  var newNode = freetype();
+
+  for (var i = 0; i < modifiers.length; i++) {
+    newNode.modifier(modifiers[i]);
+  };
+
+  var preTabPosition = getPosition();
+  var nextTab = tab();
+  backtrackTo(preTabPosition);
+
+  while (nextTab - currentTab === 2) {
+    newNode.child(parseNode());
+    var preTabPosition = getPosition();
+    var nextTab = tab();
+    backtrackTo(preTabPosition);
+  };
+
+  return newNode;
+}
+
+function parseOrNode(start) {
+  var currentTab = start ? 0 : tab();
+
+  var orId = id();
+
+  if (orId !== 'or')
+    return null;
+
+  var orChild = node('');
+
+  var preTabPosition = getPosition();
+  var nextTab = tab();
+  backtrackTo(preTabPosition);
+
+  while (nextTab - currentTab === 2) {
+    orChild.child(parseNode());
+    var preTabPosition = getPosition();
+    var nextTab = tab();
+    backtrackTo(preTabPosition);
+  };
+
+  var thenTab = tab();
+  var thenId = id();
+
+  if (thenId !== 'then')
+    return null;
+
+  var thenChild = node('');
+
+  preTabPosition = getPosition();
+  nextTab = tab();
+  backtrackTo(preTabPosition);
+
+  while (nextTab - currentTab === 2) {
+    thenChild.child(parseNode());
+    var preTabPosition = getPosition();
+    var nextTab = tab();
+    backtrackTo(preTabPosition);
+  };
+
+  return orNode(orChild, thenChild);
+}
+
+function parseAndNode(start) {
+  var currentTab = start ? 0 : tab();
+
+  var andId = id();
+
+  if (andId !== 'and')
+    return null;
+
+  var andChild = node('');
+
+  var preTabPosition = getPosition();
+  var nextTab = tab();
+  backtrackTo(preTabPosition);
+
+  while (nextTab - currentTab === 2) {
+    andChild.child(parseNode());
+    var preTabPosition = getPosition();
+    var nextTab = tab();
+    backtrackTo(preTabPosition);
+  };
+
+  var thenTab = tab();
+  var thenId = id();
+
+  if (thenId !== 'then')
+    return null;
+
+  var thenChild = node('');
+
+  preTabPosition = getPosition();
+  nextTab = tab();
+  backtrackTo(preTabPosition);
+
+  while (nextTab - currentTab === 2) {
+    thenChild.child(parseNode());
+    var preTabPosition = getPosition();
+    var nextTab = tab();
+    backtrackTo(preTabPosition);
+  };
+
+  return andNode(andChild, thenChild);
 }
 
 function mods() {
@@ -452,12 +568,12 @@ function mods() {
   if (isBrace) {
     while (true) {
       var newMod = modifier();
-      var semicol = semicolon();
       if (!newMod) {
         closeBrace();
         return newModifiers;
-      } else {
+      } else {        
         newModifiers.push(newMod);
+        semicolon();
       }
     }
   } else {
@@ -498,7 +614,7 @@ function modifier() {
         value = null;
       };
       closeParen();
-      return add(prop, value);
+      return add('params', prop, value);
 
     case 'replace':
       openParen();
@@ -509,6 +625,7 @@ function modifier() {
       var toStr = string();
       if (!toStr && underscore())
         var toStr = null;
+      closeParen();
       return replace(prop, fromStr, toStr);
   }
 
@@ -643,13 +760,15 @@ function getToken() {
   <div id="qnav-url"></div>
     <div id="defs">
       <textarea id="script" cols="120" rows="30">
+'$news'
+  '$yandex' -> host('https://news.yandex.ru')
+  '$bbc' -> host('https://bbc.com')
 '$music'
   '$groove' -> host('https://groovemp3.com')
     '$artist' -> path('artist/{artist}')
       freetype -> replace(path, '{artist}', _)
-    '$song' ->
-  '$v$k' -> 
-
+  '$vk' -> {host('https://vk.com'); path('audio')}
+    freetype -> param('q', _)
 '$search'
   'at $google' -> host('https://google.com') 
   'at $yandex' -> host('https://yandex.ru')
