@@ -590,18 +590,24 @@ function modifier() {
     case 'host':
       openParen();
       var str = string();
+      if (!str && underscore())
+        str = null;
       closeParen();
       return set('host', str);
 
     case 'path':
       openParen();
       var str = string();
+      if (!str && underscore())
+        str = null;
       closeParen();
       return set('path', str);
 
     case 'anchor':
       openParen();
       var str = string();
+      if (!str && underscore())
+        str = null;
       closeParen();
       return set('anchor', str);
 
@@ -704,16 +710,26 @@ function getToken() {
       }
       return { type: STRING, value: str };
 
+    case '/':
+      if (getNextChar() !== '/')
+        return null;
+      while (getNextChar() !== '\n')
+        ;
+      backtrack(1);
+      return getToken();
     case '\n':
       var tabCount = 0;
 
       ch = getNextChar();
 
-      while (ch === ' ') {
+      while (ch === ' ' || ch === '\t') {
         ++tabCount;
         ch = getNextChar();
       }
       backtrack(1);
+      if (ch === '/' || ch === '\n')
+          return getToken();
+
       return { type: TAB, value: tabCount };
     case '-':
       if (getNextChar() === '>')
@@ -763,15 +779,20 @@ function getToken() {
 '$news'
   '$yandex' -> host('https://news.yandex.ru')
   '$bbc' -> host('https://bbc.com')
+
+// Music
 '$music'
   '$groove' -> host('https://groovemp3.com')
     '$artist' -> path('artist/{artist}')
       freetype -> replace(path, '{artist}', _)
   '$vk' -> {host('https://vk.com'); path('audio')}
     freetype -> param('q', _)
+
 '$search'
   'at $google' -> host('https://google.com') 
   'at $yandex' -> host('https://yandex.ru')
+
+// Google Translate
 '$t$ranslate' -> {host('https://translate.google.com'); anchor('{from}/{to}/{text}')}
   or
     'from $russian' -> replace(anchor, '{from}', 'ru')
