@@ -180,7 +180,7 @@ function Parser(sourceText) {
     var thenId = id();
 
     if (thenId !== 'then')
-      wrongToken([ID]);
+      error('\'then\' block expected after \'or\' block');
 
     var thenChild = node('');
 
@@ -223,7 +223,7 @@ function Parser(sourceText) {
     var thenId = id();
 
     if (thenId !== 'then')
-      return null;
+      error('\'then\' block expected after \'and\' block');
 
     var thenChild = node('');
 
@@ -236,6 +236,7 @@ function Parser(sourceText) {
       var preTabPosition = getPosition();
       var nextTab = tab();
       backtrackTo(preTabPosition);
+
     };
 
     return andNode(andChild, thenChild);
@@ -449,9 +450,13 @@ function Parser(sourceText) {
           ++tabCount;
           ch = getNextChar();
         }
+
         backtrack(1);
         if (ch === '/' || ch === '\n')
             return getToken();
+
+        if (tabCount % 2 !== 0)
+            error("Uneven count of tabs");
 
         return { type: TAB, value: tabCount };
       case '-':
