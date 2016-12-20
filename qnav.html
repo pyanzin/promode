@@ -45,6 +45,7 @@
   <body>
   <input id="qnav-input" type="text" oninput="ontype(this.value)" />
   <div id="qnav-url"></div>
+  <div id="qnav-error"></div>
     <div id="defs">
       <textarea id="script" cols="120" rows="30">
 '$news'
@@ -57,7 +58,7 @@
     '$artist' -> path('artist/{artist}')
       freetype -> replace(path, '{artist}', _)
   '$vk' -> {host('https://vk.com'); path('audio')}
-    freetype -> param('q', _)
+    freetype -> param( 'q', _)
 
 '$search'
   '$images'
@@ -87,7 +88,7 @@
   freetype -> {replace(anchor, '{from}', 'en'); replace(anchor, '{to}', 'ru'); replace(anchor, '{text}', _)}
 
 '$o$xford dictionary' -> { host('https://en.oxforddictionaries.com'); path('definition/{word}') }
-  freetype -> replace(path, '{word}', _)
+  freetype -> replace(path, '{word}', _) 
       </textarea>
 
     </div>

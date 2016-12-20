@@ -298,10 +298,19 @@ $(function() {
   });
   $("#qnav-input").focus();
   parse();  
-  ontype("");
 });
 
 function parse() {
-  root = Parser($('#script').val());
+  var result = Parser($('#script').val());
+  if (result.success) {
+    root = result.tree;
+    $('#qnav-error').text('');
+    ontype("");
+  } else {
+    var errorText = result.error.text + " at " +
+      result.error.row + ":" + result.error.col;
+    $('#qnav-error').text(errorText);
+    $('#tree').text("");
+  }
 }
 

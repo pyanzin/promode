@@ -1,8 +1,6 @@
 function Parser(sourceText) {
   var parserState = {
     position: 0,
-    line: 0,
-    row: 0,
     source: sourceText
   };
 
@@ -18,6 +16,35 @@ function Parser(sourceText) {
     SEMICOLON = 9,
     COMMA = 10;
 
+  function tokenToString(n) {
+    switch (n) {
+      case STRING:
+        return "STRING";
+      case ARROW:
+        return "ARROW";
+      case OPEN_PAREN:
+        return "OPEN_PAREN";
+      case CLOSE_PAREN:
+        return "CLOSE_PAREN";
+      case OPEN_BRACE:
+        return "OPEN_BRACE";
+      case CLOSE_BRACE:
+        return "CLOSE_BRACE";
+      case ID:
+        return "ID";
+      case TAB:
+        return "TAB";
+      case UNDERSCORE:
+        return "UNDERSCORE";
+      case SEMICOLON:
+        return "SEMICOLON";
+      case COMMA:
+        return "COMMA";
+      default:
+        return null;
+    }
+  }
+
   function parseTop() {
     var rootNode = node("");
     var newNode = parseNode(true);
@@ -28,7 +55,7 @@ function Parser(sourceText) {
   }
 
   function parseNode(start) {  
-    var startPosition = getState();  
+    var startPosition = getPosition();  
     var currentTab = start ? 0 : tab();
 
     var str = string();
@@ -71,7 +98,7 @@ function Parser(sourceText) {
       modifiers = [];
     }
 
-    var preTabPosition = getState();
+    var preTabPosition = getPosition();
     var nextTab = tab();
     backtrackTo(preTabPosition);
 
@@ -83,7 +110,7 @@ function Parser(sourceText) {
 
     while (nextTab - currentTab === 2) {
       newNode.child(parseNode());
-      var preTabPosition = getState();
+      var preTabPosition = getPosition();
       var nextTab = tab();
       backtrackTo(preTabPosition);
     };
@@ -114,13 +141,13 @@ function Parser(sourceText) {
       newNode.modifier(modifiers[i]);
     };
 
-    var preTabPosition = getState();
+    var preTabPosition = getPosition();
     var nextTab = tab();
     backtrackTo(preTabPosition);
 
     while (nextTab - currentTab === 2) {
       newNode.child(parseNode());
-      var preTabPosition = getState();
+      var preTabPosition = getPosition();
       var nextTab = tab();
       backtrackTo(preTabPosition);
     };
@@ -138,13 +165,13 @@ function Parser(sourceText) {
 
     var orChild = node('');
 
-    var preTabPosition = getState();
+    var preTabPosition = getPosition();
     var nextTab = tab();
     backtrackTo(preTabPosition);
 
     while (nextTab - currentTab === 2) {
       orChild.child(parseNode());
-      var preTabPosition = getState();
+      var preTabPosition = getPosition();
       var nextTab = tab();
       backtrackTo(preTabPosition);
     };
@@ -153,17 +180,17 @@ function Parser(sourceText) {
     var thenId = id();
 
     if (thenId !== 'then')
-      return null;
+      wrongToken([ID]);
 
     var thenChild = node('');
 
-    preTabPosition = getState();
+    preTabPosition = getPosition();
     nextTab = tab();
     backtrackTo(preTabPosition);
 
     while (nextTab - currentTab === 2) {
       thenChild.child(parseNode());
-      var preTabPosition = getState();
+      var preTabPosition = getPosition();
       var nextTab = tab();
       backtrackTo(preTabPosition);
     };
@@ -181,13 +208,13 @@ function Parser(sourceText) {
 
     var andChild = node('');
 
-    var preTabPosition = getState();
+    var preTabPosition = getPosition();
     var nextTab = tab();
     backtrackTo(preTabPosition);
 
     while (nextTab - currentTab === 2) {
       andChild.child(parseNode());
-      var preTabPosition = getState();
+      var preTabPosition = getPosition();
       var nextTab = tab();
       backtrackTo(preTabPosition);
     };
@@ -200,13 +227,13 @@ function Parser(sourceText) {
 
     var thenChild = node('');
 
-    preTabPosition = getState();
+    preTabPosition = getPosition();
     nextTab = tab();
     backtrackTo(preTabPosition);
 
     while (nextTab - currentTab === 2) {
       thenChild.child(parseNode());
-      var preTabPosition = getState();
+      var preTabPosition = getPosition();
       var nextTab = tab();
       backtrackTo(preTabPosition);
     };
@@ -242,50 +269,50 @@ function Parser(sourceText) {
 
     switch (identifier) {
       case 'host':
-        openParen();
+        openParen(true);
         var str = string();
-        if (!str && underscore())
+        if (!str && underscore(true))
           str = null;
-        closeParen();
+        closeParen(true);
         return set('host', str);
 
       case 'path':
-        openParen();
+        openParen(true);
         var str = string();
-        if (!str && underscore())
+        if (!str && underscore(true))
           str = null;
-        closeParen();
+        closeParen(true);
         return set('path', str);
 
       case 'anchor':
-        openParen();
+        openParen(true);
         var str = string();
-        if (!str && underscore())
+        if (!str && underscore(true))
           str = null;
-        closeParen();
+        closeParen(true);
         return set('anchor', str);
 
       case 'param':
-        openParen();
-        var prop = string();
-        comma();
+        openParen(true);
+        var prop = string(true);
+        comma(true);
         var value = string();
-        if (!value && underscore()) {
+        if (!value && underscore(true)) {
           value = null;
         };
-        closeParen();
+        closeParen(true);
         return add('params', prop, value);
 
       case 'replace':
-        openParen();
-        var prop = id();
-        comma();
-        var fromStr = string();
-        comma();
+        openParen(true);
+        var prop = id(true);
+        comma(true);
+        var fromStr = string(true);
+        comma(true);
         var toStr = string();
-        if (!toStr && underscore())
+        if (!toStr && underscore(true))
           var toStr = null;
-        closeParen();
+        closeParen(true);
         return replace(prop, fromStr, toStr);
     }
 
@@ -305,12 +332,14 @@ function Parser(sourceText) {
   var semicolon = BoolParser(SEMICOLON);
 
   function BoolParser(type) {
-    return function() {
-      var startPosition = getState();
+    return function(isRequired) {
+      var startPosition = getPosition();
       var token = getToken();
 
       if (token.type !== type) {
         backtrackTo(startPosition);
+        if (isRequired)
+          wrongToken([type]);
         return false;
       } else {
         return true;
@@ -319,12 +348,14 @@ function Parser(sourceText) {
   }
 
   function ValueParser(type) {
-    return function() {
-      var startPosition = getState();
+    return function(isRequired) {
+      var startPosition = getPosition();
       var token = getToken();
 
       if (token === null || token.type !== type) {
         backtrackTo(startPosition);
+        if (isRequired)
+          wrongToken([type]);
         return null;
       } else {
         return token.value;
@@ -333,34 +364,55 @@ function Parser(sourceText) {
   }
 
   function getNextChar() {
-    var nextChar = parserState.source[parserState.position++];
-    if (nextChar === '\n') {
-      ++parserState.line;
-      parserState.row = 0;
-    }
-    return nextChar;
+    return parserState.source[parserState.position++];
   }
 
   function backtrack(n) {
     parserState.position = parserState.position - n;
   }
 
-  function backtrackTo(state) {
-    parserState.position = state.position;
-    parserState.line = state.line;
-    parserState.row = state.row;
+  function backtrackTo(n) {
+    parserState.position = n;
   }
 
-  function getState() {
-    return {
-      position: parserState.position,
-      line: parserState.line,
-      row: parserState.row
-    };
+  function getPosition() {
+    return parserState.position;
   }
   
   function error(text) {
-    throw(text);
+    var colRow = getColRow(parserState.source, getPosition());
+    var ex = {
+      text: text,
+      row: colRow.row,
+      col: colRow.col
+    };
+
+    throw ex;
+  }
+
+  function wrongToken(expected) {
+    var found = getToken().type;
+    error("Expected: " + expected.map(tokenToString).join(',') 
+      + ", but found: " + tokenToString(found));
+  }
+
+  function wrongSymbol() {
+    error('Unable to recognize a token starting with: \'' +
+      getNextChar() + '\'');
+  }
+
+  function getColRow(text, pos) {
+    var row = 0, col = 0;
+    for (var i = 0; i <= pos; ++i) {
+      if (text[i] === '\n') {
+        ++row;
+        col = 0;
+      } else {
+        ++col;
+      }
+    }
+
+    return { row: row, col: col };
   }
 
   function getToken() {
@@ -378,10 +430,14 @@ function Parser(sourceText) {
         return { type: STRING, value: str };
 
       case '/':
-        if (getNextChar() !== '/')
-          return null;
+        if (getNextChar() !== '/') {
+          backtrack(2);
+          wrongSymbol();
+        }
+
         while (getNextChar() !== '\n')
           ;
+
         backtrack(1);
         return getToken();
       case '\n':
@@ -432,9 +488,22 @@ function Parser(sourceText) {
       return { type: ID, value: id };
     }
 
-    return null;
+    if (getPosition() >= parserState.source.length)
+      return null;
 
+    backtrack(1);
+    wrongSymbol();
   }
 
-  return parseTop();
+  try {
+    return {
+      success: true,
+      tree: parseTop()
+    };
+  } catch(ex) {
+    return {
+      success: false,
+      error: ex
+    };
+  }
 }
