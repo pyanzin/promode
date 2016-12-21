@@ -14,7 +14,8 @@ function Parser(sourceText) {
     TAB = 7,
     UNDERSCORE = 8,
     SEMICOLON = 9,
-    COMMA = 10;
+    COMMA = 10,
+    FILE_END = 11;
 
   function tokenToString(n) {
     switch (n) {
@@ -40,6 +41,8 @@ function Parser(sourceText) {
         return "SEMICOLON";
       case COMMA:
         return "COMMA";
+      case FILE_END:
+        return "FILE_END";
       default:
         return null;
     }
@@ -77,8 +80,15 @@ function Parser(sourceText) {
       backtrackTo(startPosition);    
       return parseAndNode(start);
     }
+    
+    if (identifier !== null)
+      error('Expected \'freetype\', \'or\' or \'and\' block, but found: \'' +
+        identifier + '\'');
+    
+    if (identifier === null && endOfFile()) 
+      return null;
 
-    return null;
+    wrongToken([ID, STRING, FILE_END]);
   }
 
   function standard(start) {
@@ -331,6 +341,7 @@ function Parser(sourceText) {
   var tab = ValueParser(TAB);
   var underscore = BoolParser(UNDERSCORE);
   var semicolon = BoolParser(SEMICOLON);
+  var endOfFile = BoolParser(FILE_END);
 
   function BoolParser(type) {
     return function(isRequired) {
@@ -393,8 +404,8 @@ function Parser(sourceText) {
 
   function wrongToken(expected) {
     var found = getToken().type;
-    error("Expected: " + expected.map(tokenToString).join(',') 
-      + ", but found: " + tokenToString(found));
+    error("Expected: " + expected.map(tokenToString).join(', ') 
+      + "; but found: " + tokenToString(found));
   }
 
   function wrongSymbol() {
@@ -462,8 +473,10 @@ function Parser(sourceText) {
       case '-':
         if (getNextChar() === '>')
           return { type: ARROW };
-        else
-          return null;
+        else {
+          backtrack(1);
+          wrongSymbol();
+        }
         break;
 
       case '(':
@@ -494,7 +507,7 @@ function Parser(sourceText) {
     }
 
     if (getPosition() >= parserState.source.length)
-      return null;
+      return { type: FILE_END };
 
     backtrack(1);
     wrongSymbol();
