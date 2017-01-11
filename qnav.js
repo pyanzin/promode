@@ -10,7 +10,7 @@ function addElement(elem, depth) {
 
 // makes standard node from shortcut passed
 function node(shortcut) { 
-  var re = /\$([a-zA-Z0-9\/]{1})/g;
+  var re = /\$([a-zA-Z0-9\/ ]{1})/g;
   var keys = shortcut.match(re) || [];
   var prefix = "";
   var note = shortcut;
@@ -296,16 +296,21 @@ $(function() {
         //window.location.href = qnav.url;
     };
   });
+
+  editor = ace.edit("script");
+  editor.setTheme("ace/theme/github");
+  editor.getSession().setMode("ace/mode/python");
+
   $("#qnav-input").focus();
   parse();  
 });
 
 function parse() {
-  var result = Parser($('#script').val());
+  var result = Parser(editor.getValue());
   if (result.success) {
     root = result.tree;
     $('#qnav-error').text('');
-    ontype("");
+    //ontype("");
   } else {
     var errorText = result.error.text + " at " +
       result.error.row + ":" + result.error.col;

@@ -330,18 +330,19 @@ function Parser(sourceText) {
     return null;
   }
 
-  var comma = BoolParser(COMMA);
-  var openParen = BoolParser(OPEN_PAREN);
-  var closeParen = BoolParser(CLOSE_PAREN);
-  var id = ValueParser(ID);
-  var openBrace = BoolParser(OPEN_BRACE);
-  var closeBrace = BoolParser(CLOSE_BRACE);
-  var string = ValueParser(STRING);
-  var arrow = BoolParser(ARROW);
-  var tab = ValueParser(TAB);
-  var underscore = BoolParser(UNDERSCORE);
-  var semicolon = BoolParser(SEMICOLON);
-  var endOfFile = BoolParser(FILE_END);
+  var comma = BoolParser(COMMA),
+    openParen = BoolParser(OPEN_PAREN),
+    closeParen = BoolParser(CLOSE_PAREN),
+    id = ValueParser(ID),
+    openBrace = BoolParser(OPEN_BRACE),
+    closeBrace = BoolParser(CLOSE_BRACE),
+    string = ValueParser(STRING),
+    arrow = BoolParser(ARROW),
+    tab = ValueParser(TAB),
+    underscore = BoolParser(UNDERSCORE),
+    semicolon = BoolParser(SEMICOLON),
+    endOfFile = BoolParser(FILE_END);
+
 
   function BoolParser(type) {
     return function(isRequired) {
