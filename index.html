@@ -43,11 +43,10 @@
       #script { 
         width: 1000px;
         height: 800px;
-        position: absolute;
-        top: 40px;
-        right: 0;
-        bottom: 0;
-        left: 100px;
+      }
+
+      #tree {
+        margin: 12px;
       }
 
       #scriptContainer {
@@ -62,6 +61,7 @@
   <input id="qnav-input" type="text" oninput="ontype(this.value)" />
   <div id="qnav-url"></div>
   <div id="qnav-error"></div>
+  <input type="button" value="Save" onclick="saveScript()" />
     <div id="defs">
       <div id="script">'$news'
   '$yandex' -> host('https://news.yandex.ru')
@@ -104,6 +104,7 @@
 
 '$o$xford dictionary' -> { host('https://en.oxforddictionaries.com'); path('definition/{word}') }
   freetype -> replace(path, '{word}', _)
+
       </div>
   </div>
   <div id="tree"></div>

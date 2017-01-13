@@ -300,13 +300,15 @@ $(function() {
   editor = ace.edit("script");
   editor.setTheme("ace/theme/github");
   editor.getSession().setMode("ace/mode/python");
+  editor.setOption('tabSize', 2);  
+  editor.setValue(localStorage.script);
 
   $("#qnav-input").focus();
   parse();  
 });
 
 function parse() {
-  var result = Parser(editor.getValue());
+  var result = Parser(localStorage.script);
   if (result.success) {
     root = result.tree;
     $('#qnav-error').text('');
@@ -319,3 +321,6 @@ function parse() {
   }
 }
 
+function saveScript () {
+  localStorage.script = editor.getValue();
+}
