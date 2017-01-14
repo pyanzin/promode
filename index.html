@@ -64,46 +64,46 @@
   <input type="button" value="Save" onclick="saveScript()" />
     <div id="defs">
       <div id="script">'$news'
-  '$yandex' -> host('https://news.yandex.ru')
-  '$bbc' -> host('https://bbc.com')
+  '$yandex' -&gt; host('https://news.yandex.ru')
+  '$bbc' -&gt; host('https://bbc.com')
 
 // Music
 '$music'
-  '$groove' -> host('https://groovemp3.com')
-    '$artist' -> path('artist/{artist}')
-      freetype -> replace(path, '{artist}', _)
-  '$vk' -> {host('https://vk.com'); path('audio')}
-    freetype -> param('q', _)
+  '$groove' -&gt; host('https://groovemp3.com')
+    '$artist' -&gt; path('artist/{artist}')
+      freetype -&gt; replace(path, '{artist}', _)
+  '$vk' -&gt; {host('https://vk.com'); path('audio')}
+    freetype -&gt; param('q', _)
 
 '$search'
   '$images'
-    'on $google' -> {host('https://google.com'); param('tbm', 'isch'); param('sa', 'X')}
-      freetype -> {path('search'); param('q', _)}
-  'on $google' -> host('https://google.com')
-    freetype -> {path('search'); param('q', _)}
-  'on $yandex' -> host('https://yandex.ru')
-  'on $stack$overflow' -> host('http://stackoverflow.com')
-    freetype -> {path('search'); param('q', _)}
+    'on $google' -&gt; {host('https://google.com'); param('tbm', 'isch'); param('sa', 'X')}
+      freetype -&gt; {path('search'); param('q', _)}
+  'on $google' -&gt; host('https://google.com')
+    freetype -&gt; {path('search'); param('q', _)}
+  'on $yandex' -&gt; host('https://yandex.ru')
+  'on $stack$overflow' -&gt; host('http://stackoverflow.com')
+    freetype -&gt; {path('search'); param('q', _)}
 
 // Google Translate
-'$t$ranslate' -> {host('https://translate.google.com'); anchor('{from}/{to}/{text}')}
+'$t$ranslate' -&gt; {host('https://translate.google.com'); anchor('{from}/{to}/{text}')}
   or
-    'from $russian' -> replace(anchor, '{from}', 'ru')
-    'from $english' -> replace(anchor, '{from}', 'en')
-    'from $spanish' -> replace(anchor, '{from}', 'es')
-    'from $german' -> replace(anchor, '{from}', 'de')
+    'from $russian' -&gt; replace(anchor, '{from}', 'ru')
+    'from $english' -&gt; replace(anchor, '{from}', 'en')
+    'from $spanish' -&gt; replace(anchor, '{from}', 'es')
+    'from $german' -&gt; replace(anchor, '{from}', 'de')
   then
     or
-      'to $russian' -> replace(anchor, '{to}', 'ru')
-      'to $english' -> replace(anchor, '{to}', 'en')
-      'to $spanish' -> replace(anchor, '{to}', 'es')
-      'to $german' -> replace(anchor, '{to}', 'de')
+      'to $russian' -&gt; replace(anchor, '{to}', 'ru')
+      'to $english' -&gt; replace(anchor, '{to}', 'en')
+      'to $spanish' -&gt; replace(anchor, '{to}', 'es')
+      'to $german' -&gt; replace(anchor, '{to}', 'de')
     then
-      freetype -> replace(anchor, '{text}', _)
-  freetype -> {replace(anchor, '{from}', 'en'); replace(anchor, '{to}', 'ru'); replace(anchor, '{text}', _)}
+      freetype -&gt; replace(anchor, '{text}', _)
+  freetype -&gt; {replace(anchor, '{from}', 'en'); replace(anchor, '{to}', 'ru'); replace(anchor, '{text}', _)}
 
-'$o$xford dictionary' -> { host('https://en.oxforddictionaries.com'); path('definition/{word}') }
-  freetype -> replace(path, '{word}', _)
+'$o$xford dictionary' -&gt; { host('https://en.oxforddictionaries.com'); path('definition/{word}') }
+  freetype -&gt; replace(path, '{word}', _)
 
       </div>
   </div>

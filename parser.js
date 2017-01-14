@@ -99,10 +99,8 @@ function Parser(sourceText) {
     if (!shortcut)
       return null;
 
-    var isArrow = arrow();
-
     var modifiers;
-    if (isArrow) {
+    if (arrow()) {
       modifiers = mods();
     } else {
       modifiers = [];
@@ -110,6 +108,13 @@ function Parser(sourceText) {
 
     var preTabPosition = getPosition();
     var nextTab = tab();
+    
+    while (arrow()) {
+      modifiers = modifiers.concat(mods());
+      preTabPosition = getPosition();
+      nextTab = tab();
+    }
+
     backtrackTo(preTabPosition);
 
     var newNode = node(shortcut);
@@ -273,6 +278,22 @@ function Parser(sourceText) {
     }
   }
 
+  function paramValue() {
+    var preValPosition = getPosition();
+    var str = string();
+
+    if (str !== null)
+      return str;
+
+    var identifier = id();
+
+    if (identifier  !== null)
+      return function(obj) { return obj[identifier]; }
+    
+    backtrackTo(preValPosition);
+    return null;
+  }
+
   function modifier() {
     var identifier = id();
     if (identifier === null) 
@@ -281,19 +302,19 @@ function Parser(sourceText) {
     switch (identifier) {
       case 'host':
         openParen(true);
-        var str = string();
-        if (!str && underscore(true))
-          str = null;
+        var val = paramValue();
+        if (val === null && underscore(true))
+          val = null;
         closeParen(true);
-        return set('host', str);
+        return set('host', val);
 
       case 'path':
         openParen(true);
-        var str = string();
-        if (!str && underscore(true))
-          str = null;
+        var val = paramValue();
+        if (val === null && underscore(true))
+          val = null;
         closeParen(true);
-        return set('path', str);
+        return set('path', val);
 
       case 'anchor':
         openParen(true);
@@ -318,17 +339,27 @@ function Parser(sourceText) {
         openParen(true);
         var prop = id(true);
         comma(true);
-        var fromStr = string(true);
+        var fromVal = paramValue();
         comma(true);
-        var toStr = string();
-        if (!toStr && underscore(true))
-          var toStr = null;
+        var toVal = paramValue();
+        if (toVal === null && underscore(true))
+          var toVal = null;
         closeParen(true);
-        return replace(prop, fromStr, toStr);
+        return replace(prop, fromVal, toVal);
+
+      case 'set':
+        openParen(true);
+        var identifier = id();
+        comma(true);
+        var val = paramValue();
+        closeParen(true);
+        return set(identifier, val);
+        
     }
 
     return null;
   }
+
 
   var comma = BoolParser(COMMA),
     openParen = BoolParser(OPEN_PAREN),
@@ -436,8 +467,14 @@ function Parser(sourceText) {
 
     switch (ch) {
       case '\'':
+        var preStringPosition = getPosition();
         var str = '';
         while ((ch = getNextChar()) !== '\'') {
+          if (ch === '\n') {
+            backtrackTo(preStringPosition);
+            backtrack(1);
+            error('Unclosed string');
+          }
           str += ch;
         }
         return { type: STRING, value: str };

@@ -180,10 +180,16 @@ function freetype() {
 function set(prop, value) {
   if (value === null)
     return function(obj, value) {
+      if (typeof(prop) === 'function')
+        prop = prop(obj);
       obj[prop] = value;
     };
   else
     return function(obj) {
+      if (typeof(prop) === 'function')
+        prop = prop(obj);
+      if (typeof(value) === 'function')
+        value = value(obj);
       obj[prop] = value;
     };
 }
@@ -196,6 +202,10 @@ function replace(prop, from, to) {
     };
   else
     return function(obj) {
+      if (typeof(from) === 'function')
+        from = from(obj);
+      if (typeof(to) === 'function')
+        to = to(obj);
       obj[prop] = obj[prop].replace(from, to);
     }
 }
@@ -209,6 +219,8 @@ function add(prop, key, value) {
     };
   else
     return function(obj) {
+      if (typeof(value) === 'function')
+        value = value(obj);
       obj[prop] = obj[prop] || [];
       obj[prop].push({k: key, v: value});
     }
@@ -300,8 +312,11 @@ $(function() {
   editor = ace.edit("script");
   editor.setTheme("ace/theme/github");
   editor.getSession().setMode("ace/mode/python");
-  editor.setOption('tabSize', 2);  
-  editor.setValue(localStorage.script);
+  editor.setOption('tabSize', 2);
+  if (localStorage.script)  
+    editor.setValue(localStorage.script);
+  else
+    localStorage.script = editor.getValue();
 
   $("#qnav-input").focus();
   parse();  
@@ -315,7 +330,7 @@ function parse() {
     //ontype("");
   } else {
     var errorText = result.error.text + " at " +
-      result.error.row + ":" + result.error.col;
+      (result.error.row + 1) + ":" + (result.error.col + 1);
     $('#qnav-error').text(errorText);
     $('#tree').text("");
   }
