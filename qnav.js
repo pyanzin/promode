@@ -147,12 +147,17 @@ function andNode(andBody, thenBody) {
 }
 
 // makes freetype node which captures all the input from position to the end of string
-function freetype() {
+function freetype(terminator) {
   return {
     children: [],
     modifiers: [],
     match: function(pattern, position) {
-      return pattern.substring(position);
+      var termPosition = pattern.indexOf(terminator, position);
+
+      if (termPosition === -1)
+        return pattern.substring(position);
+      else
+        return pattern.substring(position, termPosition);
     },    
     child: function(newChild) {
       this.children.push(newChild);
@@ -166,12 +171,41 @@ function freetype() {
       var that = this;
       var matchText = this.match(pattern, position);
 
-      var mods = that.modifiers.map(function(m) { return function(result) { m(result, matchText); }; });
+      debugger;
+      var mods = that.modifiers.map(
+        function(m) { return function(result) { m(result, matchText); };
+      });
       
-      var freetypeElement = $('<span style="background-color: ' + toColor("freetype") + '" class="node-passed">'+ matchText +'</span>');
+      var freetypeElement = $('<span style="background-color: ' +
+        toColor("freetype") + '" class="node-passed">'+ matchText +'</span>');
       var mods = mods.concat(addElement(freetypeElement, depth));
 
-      return parseResult(matchText.length, mods);
+      var termLength = terminator ? terminator.length : 0;
+
+      if (this.children.length === 0)
+        return parseResult(matchText.length + termLength, mods);
+      
+      if (pattern.length <= position + termLength) {
+        var possibleResults = parseResult();
+        for (var i = 0; i < that.children.length; ++i) {
+          possibleResults = merge(possibleResults,
+            that.children[i].traverse(pattern, position + matchText.length + termLength, depth + 1));
+        }
+
+        return merge(
+          parseResult( matchText.length + termLength, that.modifiers.concat([addElement(freetypeElement, depth)])),
+          possibleResults);
+      }
+
+      for (var i = 0; i < that.children.length; ++i) {
+        var result = that.children[i].traverse(pattern, position + matchText.length + termLength,
+          depth + 1);
+        if (result !== null)
+          return merge(
+            parseResult(matchText.length + termLength, that.modifiers.concat([addElement(that.passedElem, depth)])),
+            result
+          );
+      };
     }
   };
 }
@@ -313,6 +347,9 @@ $(function() {
   editor.setTheme("ace/theme/github");
   editor.getSession().setMode("ace/mode/python");
   editor.setOption('tabSize', 2);
+  // this shows all invisibles, but only the spaces are required
+  //editor.setOption('showInvisibles', true);
+
   if (localStorage.script)  
     editor.setValue(localStorage.script);
   else

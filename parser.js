@@ -141,16 +141,19 @@ function Parser(sourceText) {
     if (identifier !== 'freetype')
       return null;
 
-    var isArrow = arrow();
-
-    var modifiers;
-    if (isArrow) {
-      modifiers = mods();
-    } else {
-      modifiers = [];
+    var terminator = null;
+    if (openParen()) {
+      terminator = string(true);
+      closeParen(true);
     }
 
-    var newNode = freetype();
+    var isArrow = arrow();
+
+    var modifiers = [];
+    if (isArrow)
+      modifiers = mods();
+
+    var newNode = freetype(terminator);
 
     for (var i = 0; i < modifiers.length; i++) {
       newNode.modifier(modifiers[i]);
