@@ -375,4 +375,12 @@ function parse() {
 
 function saveScript () {
   localStorage.script = editor.getValue();
+  parse();
+  $("#treeWrapper").css("display", "flex");
+  $("#scriptWrapper").css("display", "none");
+}
+
+function editManifest() {
+  $("#treeWrapper").css("display", "none");
+  $("#scriptWrapper").css("display", "flex");
 }
