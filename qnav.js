@@ -347,6 +347,7 @@ $(function() {
   editor.setTheme("ace/theme/github");
   editor.getSession().setMode("ace/mode/python");
   editor.setOption('tabSize', 2);
+  //localStorage.script = editor.getValue();
   // this shows all invisibles, but only the spaces are required
   //editor.setOption('showInvisibles', true);
 
@@ -356,31 +357,42 @@ $(function() {
     localStorage.script = editor.getValue();
 
   $("#qnav-input").focus();
-  parse();  
+  onSaveScript();  
 });
 
-function parse() {
-  var result = Parser(localStorage.script);
+function onSaveScript () {
+  var result = Parser(editor.getValue());
   if (result.success) {
     root = result.tree;
-    $('#qnav-error').text('');
-    //ontype("");
+    ontype("");
+    editor.session.clearAnnotations();
+
+    localStorage.script = editor.getValue();
+
+    $("#editScriptBtn").css("display", "block");
+    $("#saveScriptBtn").css("display", "none");
+
+    $("#treeWrapper").css("display", "flex");
+    $("#scriptWrapper").css("display", "none");
   } else {
-    var errorText = result.error.text + " at " +
-      (result.error.row + 1) + ":" + (result.error.col + 1);
-    $('#qnav-error').text(errorText);
+    editor.session.setAnnotations([{
+      row: result.error.row,
+      column: result.error.col,
+      text: result.error.text,
+      type: "error"
+    }]);
+
     $('#tree').text("");
   }
+
 }
 
-function saveScript () {
-  localStorage.script = editor.getValue();
-  parse();
-  $("#treeWrapper").css("display", "flex");
-  $("#scriptWrapper").css("display", "none");
-}
+function onEditScript() {
+  editor.setValue(localStorage.script);
 
-function editManifest() {
+  $("#editScriptBtn").css("display", "none");
+  $("#saveScriptBtn").css("display", "block");
+
   $("#treeWrapper").css("display", "none");
   $("#scriptWrapper").css("display", "flex");
 }

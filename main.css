@@ -1,0 +1,77 @@
+  body {
+    font-family: monospace;
+  }
+
+  .node-passed {
+    padding: 8px;
+    margin:2px;
+    border-radius: 8px;
+  }
+
+  .node-possible {
+    border-style: solid;
+    padding: 8px;
+    margin:2px;
+    border-radius: 8px;
+  }
+
+  .node-possible .key {
+    background-color: gray;
+    padding: 2px 6px;
+    margin: 2px;
+    border-radius: 3px;
+    font-weight: bold;
+  }
+
+  .node-passed .key {
+    color: white;
+    background-color: black;
+    padding: 2px 6px;
+    margin: 2px;
+    border-radius: 3px;
+    font-weight: bold;
+  }
+
+  #script { 
+    width: 1000px;
+    height: 800px;
+  }
+
+  #tree {
+    margin: 12px;
+  }
+
+  #wrapper {
+    display: flex;
+    flex-direction: column;
+  }
+
+  #header {
+    display: flex;
+    flex-direction: row wrap;
+    justify-content: space-between;
+    padding: .5em;
+  }
+
+  #header h1 {
+    display: inline;
+    margin: .25em;
+  }
+
+  #treeWrapper {
+    height: 700px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  #scriptWrapper {
+    display: none;
+    flex-direction: column;
+  }
+
+  #qnav-input {
+    font-size: 3em;
+    width: 16em;
+  }
+
