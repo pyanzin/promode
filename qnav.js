@@ -171,7 +171,6 @@ function freetype(terminator) {
       var that = this;
       var matchText = this.match(pattern, position);
 
-      debugger;
       var mods = that.modifiers.map(
         function(m) { return function(result) { m(result, matchText); };
       });
@@ -347,6 +346,7 @@ $(function() {
   editor.setTheme("ace/theme/github");
   editor.getSession().setMode("ace/mode/python");
   editor.setOption('tabSize', 2);
+  editor.setShowPrintMargin(false);
   //localStorage.script = editor.getValue();
   // this shows all invisibles, but only the spaces are required
   //editor.setOption('showInvisibles', true);
@@ -374,6 +374,8 @@ function onSaveScript () {
 
     $("#treeWrapper").css("display", "flex");
     $("#scriptWrapper").css("display", "none");
+
+    $("#qnav-input").focus();
   } else {
     editor.session.setAnnotations([{
       row: result.error.row,

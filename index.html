@@ -20,9 +20,7 @@
       <input id="qnav-input" type="text" oninput="ontype(this.value)" />
     </div>
     <div id="scriptWrapper" style="display: none">
-      <div id="qnav-error"></div>
-        <div id="defs">
-          <div id="script">'$news'
+        <div id="script">'$news'
   '$yandex' -&gt; host('https://news.yandex.ru')
   '$bbc' -&gt; host('https://bbc.com')
   '$cnn' -&gt; host('https://cnn.com')
@@ -78,7 +76,6 @@
 
 '$o$xford dictionary' -&gt; { host('https://en.oxforddictionaries.com'); path('definition/{word}') }
   freetype -&gt; replace(path, '{word}', _)
-          </div>
       </div>
       </div>
     </div>
