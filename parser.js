@@ -15,7 +15,9 @@ function Parser(sourceText) {
     UNDERSCORE = 8,
     SEMICOLON = 9,
     COMMA = 10,
-    FILE_END = 11;
+    FILE_END = 11,
+    SHARP = 12,
+    EQUAL = 13;
 
   function tokenToString(n) {
     switch (n) {
@@ -43,6 +45,10 @@ function Parser(sourceText) {
         return "COMMA";
       case FILE_END:
         return "FILE_END";
+      case SHARP:
+        return "SHARP";
+      case EQUAL:
+        return "EQUAL";
       default:
         return null;
     }
@@ -290,7 +296,7 @@ function Parser(sourceText) {
 
     var identifier = id();
 
-    if (identifier  !== null)
+    if (identifier !== null)
       return function(obj) { return obj[identifier]; }
     
     backtrackTo(preValPosition);
@@ -299,8 +305,6 @@ function Parser(sourceText) {
 
   function modifier() {
     var identifier = id();
-    if (identifier === null) 
-      return null;
 
     switch (identifier) {
       case 'host':
@@ -331,7 +335,7 @@ function Parser(sourceText) {
         openParen(true);
         var prop = string(true);
         comma(true);
-        var value = string();
+        var value = paramValue();
         if (!value && underscore(true)) {
           value = null;
         };
@@ -357,7 +361,17 @@ function Parser(sourceText) {
         var val = paramValue();
         closeParen(true);
         return set(identifier, val);
-        
+    }
+
+    if (!isSharp())
+      return null;
+
+    var varId = id(true);
+    debugger;
+    if(isEqual())
+      return set('#'+varId, mods());
+    else if(openParen() && closeParen()) {
+      return modifierVarCall('#'+varId);
     }
 
     return null;
@@ -375,7 +389,9 @@ function Parser(sourceText) {
     tab = ValueParser(TAB),
     underscore = BoolParser(UNDERSCORE),
     semicolon = BoolParser(SEMICOLON),
-    endOfFile = BoolParser(FILE_END);
+    endOfFile = BoolParser(FILE_END),
+    isSharp = BoolParser(SHARP),
+    isEqual = BoolParser(EQUAL);
 
 
   function BoolParser(type) {
@@ -534,6 +550,10 @@ function Parser(sourceText) {
         return { type: SEMICOLON };
       case ',':
         return { type: COMMA };    
+      case '#':
+        return { type: SHARP };
+      case '=':
+        return { type: EQUAL };
     }
 
     if (ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z') {

@@ -176,6 +176,8 @@ function freetype(terminator) {
         function(m) { return function(result) { m(result, matchText); };
       });
 
+      var mods = mods.concat([addElement(freetypeElement, depth)]);
+
       var terminatorPiece = terminator
                               ? '<span class="key">' + terminator + '</span>'
                               : '';
@@ -205,7 +207,7 @@ function freetype(terminator) {
           depth + 1);
         if (result !== null)
           return merge(
-            parseResult(matchText.length + termLength, mods.concat([addElement(freetypeElement, depth)])),
+            parseResult(matchText.length + termLength, mods),
             result
           );
       };
@@ -229,6 +231,14 @@ function set(prop, value) {
         value = value(obj);
       obj[prop] = value;
     };
+}
+
+function modifierVarCall(identifier) {
+  return function(obj, value) {
+    obj[identifier].forEach(function(f) {
+      f(obj, value);
+    });
+  }
 }
 
 // Makes modifier which replaces substring in property
