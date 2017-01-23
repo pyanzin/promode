@@ -58,21 +58,22 @@ function node(shortcut) {
       if (pattern.length <= that.prefix.length + position) {
         var possibleResults = parseResult();
         for (var i = 0; i < that.children.length; ++i) {
-          possibleResults = merge(possibleResults, that.children[i].traverse(pattern, position + that.prefix.length + 1, depth + 1));
-        }
+          possibleResults = merge(possibleResults, that.children[i].traverse(
+            pattern, position + that.prefix.length + 1, depth + shortcut.length > 0 ? 1 : 0));
+        }     
 
         return merge(parseResult(
             that.prefix.length,
-            that.modifiers.concat([addElement(that.passedElem, depth)])
+            that.modifiers.concat(pattern.length > 0 ? [addElement(that.passedElem, depth)] : [])
           ),
         possibleResults);
       }
 
       for (var i = 0; i < that.children.length; ++i) {
-        var result = that.children[i].traverse(pattern, position + that.prefix.length, depth + that.prefix.length > 0 ? 1 : 0);
+        var result = that.children[i].traverse(pattern, position + that.prefix.length, depth + shortcut.length > 0 ? 1 : 0);
         if (result !== null)
           return merge(
-            parseResult(that.prefix.length, that.modifiers.concat([addElement(that.passedElem, depth)])),
+            parseResult(that.prefix.length, that.modifiers.concat(pattern.length > 0 ? [addElement(that.passedElem, depth)] : [])),
             result
           );
       };
@@ -174,10 +175,13 @@ function freetype(terminator) {
       var mods = that.modifiers.map(
         function(m) { return function(result) { m(result, matchText); };
       });
+
+      var terminatorPiece = terminator
+                              ? '<span class="key">' + terminator + '</span>'
+                              : '';
       
       var freetypeElement = $('<span style="background-color: ' +
-        toColor("freetype") + '" class="node-passed">'+ matchText +'</span>');
-      var mods = mods.concat(addElement(freetypeElement, depth));
+        toColor("freetype") + '" class="node-passed">'+ matchText + terminatorPiece + '</span>');
 
       var termLength = terminator ? terminator.length : 0;
 
@@ -192,7 +196,7 @@ function freetype(terminator) {
         }
 
         return merge(
-          parseResult( matchText.length + termLength, that.modifiers.concat([addElement(freetypeElement, depth)])),
+          parseResult( matchText.length + termLength, mods.concat([addElement(freetypeElement, depth)])),
           possibleResults);
       }
 
@@ -201,7 +205,7 @@ function freetype(terminator) {
           depth + 1);
         if (result !== null)
           return merge(
-            parseResult(matchText.length + termLength, that.modifiers.concat([addElement(that.passedElem, depth)])),
+            parseResult(matchText.length + termLength, mods.concat([addElement(freetypeElement, depth)])),
             result
           );
       };
@@ -316,7 +320,7 @@ function ontype(pattern) {
 
 function renderElemTree(elementsObj) {
   $("#tree").text("");
-  var i = 1;
+  var i = 0;
   var rowElements;
   while(rowElements = elementsObj[i++]) {
     var row = $('<div class="treeLevel"></div>');
