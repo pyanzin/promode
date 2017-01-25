@@ -359,6 +359,8 @@ function Parser(sourceText) {
         var identifier = id();
         comma(true);
         var val = paramValue();
+        if (val === null && underscore(true))
+          var val = null;
         closeParen(true);
         return set(identifier, val);
     }
@@ -367,7 +369,6 @@ function Parser(sourceText) {
       return null;
 
     var varId = id(true);
-    debugger;
     if(isEqual())
       return set('#'+varId, mods());
     else if(openParen() && closeParen()) {

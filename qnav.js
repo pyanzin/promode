@@ -25,8 +25,8 @@ function node(shortcut) {
     children: [],
     modifiers: [],
     prefix: prefix,
-    possibleElem: $('<span style="border-color: ' + toColor(shortcut) + '" class="node-possible">' + note + '</span>'),
-    passedElem: $('<span style="background-color: ' + toColor(shortcut) + '"  class="node-passed">' + note + '</span>'),
+    possibleElem: $('<span style="border-color: ' + toColor(prefix) + '" class="node-possible">' + note + '</span>'),
+    passedElem: $('<span style="background-color: ' + toColor(prefix) + '"  class="node-passed">' + note + '</span>'),
     match: function(pattern, position) {    
       return pattern.startsWith(this.prefix, position);
     },    
@@ -219,17 +219,26 @@ function freetype(terminator) {
 function set(prop, value) {
   if (value === null)
     return function(obj, value) {
+      var propName;
       if (typeof(prop) === 'function')
-        prop = prop(obj);
-      obj[prop] = value;
+        propName = prop(obj);
+      else
+        propName = prop;
+      obj[propName] = value;
     };
   else
     return function(obj) {
+      var propName;
       if (typeof(prop) === 'function')
-        prop = prop(obj);
+        propName = prop(obj);
+      else
+        propName = prop;
+      var valueName;
       if (typeof(value) === 'function')
-        value = value(obj);
-      obj[prop] = value;
+        valueName = value(obj);
+      else
+        valueName = value;
+      obj[prop] = valueName;
     };
 }
 
@@ -241,6 +250,11 @@ function modifierVarCall(identifier) {
   }
 }
 
+function replaceAll(text, from, to) {
+  var pieces = text.split(from);
+  return pieces.join(to);
+}
+
 // Makes modifier which replaces substring in property
 function replace(prop, from, to) {
   if (to === null)
@@ -250,10 +264,14 @@ function replace(prop, from, to) {
   else
     return function(obj) {
       if (typeof(from) === 'function')
-        from = from(obj);
+        var fromStr = from(obj);
+      else
+        var fromStr = from;
       if (typeof(to) === 'function')
-        to = to(obj);
-      obj[prop] = obj[prop].replace(from, to);
+        var toStr = to(obj);
+      else
+        var toStr = to;
+      obj[prop] = replaceAll(obj[prop], fromStr, toStr);
     }
 }
 
@@ -266,10 +284,11 @@ function add(prop, key, value) {
     };
   else
     return function(obj) {
+      var valueStr;
       if (typeof(value) === 'function')
-        value = value(obj);
+        valueStr = value(obj);
       obj[prop] = obj[prop] || [];
-      obj[prop].push({k: key, v: value});
+      obj[prop].push({k: key, v: valueStr});
     }
 }
 
@@ -299,7 +318,7 @@ function emptyUrl() {
 function toColor(s) {
   var res = 0;
   for (var i = 0; i < s.length; ++i) {
-    res ^= s.charCodeAt(i);
+    res += (s.charCodeAt(i) - 97) * 255 / 24 * Math.pow(2, -i + 1);
   };
 
   return "hsla(" + res % 256 + ", 58%, 70%, 1)";
