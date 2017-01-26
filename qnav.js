@@ -296,6 +296,22 @@ function add(prop, key, value) {
     }
 }
 
+function concat(prop, value) {
+  if (value === null)
+    return function(obj, value) {
+      obj[prop] = obj[prop] + value;
+    };
+  else
+    return function(obj) {
+      var valueStr;
+      if (typeof(value) === 'function')
+        valueStr = value(obj);
+      else 
+        valueStr = value;
+      obj[prop] = obj[prop] + valueStr;
+    }
+}
+
 function buildUrl(obj) {
   var url = obj.host;
   if (obj.path)

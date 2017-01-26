@@ -4,12 +4,14 @@
   }
 
   .node-passed {
+    display: inline-block;
     padding: 8px;
     margin:2px;
     border-radius: 8px;
   }
 
   .node-possible {
+    display: inline-block;
     border-style: solid;
     padding: 8px;
     margin:2px;
@@ -61,6 +63,7 @@
 
   #treeWrapper {
     height: 700px;
+    width: 1000px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;

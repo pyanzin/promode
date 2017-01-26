@@ -15,7 +15,7 @@ var PythonHighlightRules = function() {
     );
 
     var builtinFunctions = (
-        "path|anchor|param|host|set|replace|freetype"
+        "path|anchor|param|host|set|replace|freetype|concat"
     );
     var keywordMapper = this.createKeywordMapper({
         "invalid.deprecated": "debugger",

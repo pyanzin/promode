@@ -375,6 +375,15 @@ function Parser(sourceText) {
           var val = null;
         closeParen(true);
         return set(identifier, val);
+      case 'concat':
+        openParen(true);
+        var identifier = id();
+        comma(true);
+        var val = paramValue();
+        if (val === null && underscore(true))
+          var val = null;
+        closeParen(true);
+        return concat(identifier, val);
     }
 
     if (!isSharp())
