@@ -271,6 +271,8 @@ function replace(prop, from, to) {
         var toStr = to(obj);
       else
         var toStr = to;
+      if (typeof(obj[prop]) !== 'string')
+        return;
       obj[prop] = replaceAll(obj[prop], fromStr, toStr);
     }
 }
@@ -279,16 +281,18 @@ function replace(prop, from, to) {
 function add(prop, key, value) {
   if (value === null)
     return function(obj, value) {
-      obj[prop] = obj[prop] || [];
-      obj[prop].push({k: key, v: value});
+      obj[prop] = obj[prop] || {};
+      obj[prop][key] = value;
     };
   else
     return function(obj) {
       var valueStr;
       if (typeof(value) === 'function')
         valueStr = value(obj);
-      obj[prop] = obj[prop] || [];
-      obj[prop].push({k: key, v: valueStr});
+      else 
+        valueStr = value;
+      obj[prop] = obj[prop] || {};
+      obj[prop][key] = value;
     }
 }
 
@@ -296,8 +300,11 @@ function buildUrl(obj) {
   var url = obj.host;
   if (obj.path)
     url += "/" + obj.path;
-  if (obj.params.length)
-    url += "?" + obj.params.map(function(x) { return x.k + "=" + x.v; }).join("&");
+  var params = Object.keys(obj.params).map(function(k) {
+    return { key: k, value: obj.params[k] };
+  });
+  if (params.length)
+    url += "?" + params.map(function(x) { return x.key + "=" + x.value; }).join("&");
   if (obj.anchor && obj.anchor.length)
     url += "#" + obj.anchor;
 
@@ -308,7 +315,7 @@ function emptyUrl() {
   return {
     host: "",
     path: "",
-    params : [],
+    params : {},
     anchor: "",
     newWindow: false,
     elements: {}

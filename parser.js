@@ -153,11 +153,23 @@ function Parser(sourceText) {
       closeParen(true);
     }
 
-    var isArrow = arrow();
-
-    var modifiers = [];
-    if (isArrow)
+    var modifiers;
+    if (arrow()) {
       modifiers = mods();
+    } else {
+      modifiers = [];
+    }
+
+    var preTabPosition = getPosition();
+    var nextTab = tab();
+    
+    while (arrow()) {
+      modifiers = modifiers.concat(mods());
+      preTabPosition = getPosition();
+      nextTab = tab();
+    }
+
+    backtrackTo(preTabPosition);
 
     var newNode = freetype(terminator);
 
