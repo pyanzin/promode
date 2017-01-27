@@ -43,6 +43,22 @@
   'by $tag' -&gt; path('explore/tags/{tag}')
     freetype -&gt; replace(path, '{tag}', _)
 
+'$wikipedia' -&gt; {host('https://{lang}.wikipedia.org'); set(lang, 'en')}
+  and
+    '$language'
+      '$russian' -&gt; set(lang, 'ru')
+      '$english' -&gt; set(lang, 'en')
+    '$term'
+      -&gt; path('wiki/{term}')
+      freetype(';') -&gt; set(term, _)
+    '$search'
+      freetype(';') -&gt; {path('w/index.php'); param('search', _)}
+  then
+    'params'
+      -&gt; replace(host, '{lang}', lang)
+      -&gt; replace(term, ' ', '_')
+      -&gt; replace(path, '{term}', term) 
+
 '$search'
   '$images'
     'on $google' -&gt; {host('https://google.com'); param('tbm', 'isch'); param('sa', 'X')}
@@ -79,6 +95,8 @@
 
 '$o$xford dictionary' -&gt; { host('https://en.oxforddictionaries.com'); path('definition/{word}') }
   freetype -&gt; replace(path, '{word}', _)
+
+freetype -&gt; {host('https://google.com'); path('search'); param('q', _)}
       </div>
       </div>
     </div>
