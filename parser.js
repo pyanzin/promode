@@ -55,36 +55,31 @@ function Parser(sourceText) {
   }
 
   function parseTop() {
-    var rootNode = node("");
-    var newNode = parseNode(true);
-    rootNode.child(newNode);
-    while (newNode = parseNode())
-      rootNode.child(newNode);
-    return rootNode;
+    return standard(true);
   }
 
-  function parseNode(start) {  
+  function parseNode() {  
     var startPosition = getPosition();  
-    var currentTab = start ? 0 : tab();
+    var currentTab = tab();
 
     var str = string();
 
     if (str) {
       backtrackTo(startPosition);
-      return standard(start);
+      return standard();
     }
 
     var identifier = id();
 
     if (identifier === 'freetype') {
       backtrackTo(startPosition);
-      return parseFreeTypeNode(start);
+      return parseFreeTypeNode();
     } else if (identifier === 'or') {
       backtrackTo(startPosition);    
-      return parseOrNode(start);
+      return parseOrNode();
     } else if (identifier === 'and') {
       backtrackTo(startPosition);    
-      return parseAndNode(start);
+      return parseAndNode();
     }
     
     if (identifier !== null)
@@ -97,13 +92,15 @@ function Parser(sourceText) {
     wrongToken([ID, STRING, FILE_END]);
   }
 
-  function standard(start) {
-    var currentTab = start ? 0 : tab();
-
-    var shortcut = string();
-
-    if (!shortcut)
-      return null;
+  function standard(isTop) {
+    var currentTab, shortcut;
+    if (isTop) {
+      currentTab = -2;
+      shortcut = "";
+    } else {
+      currentTab = tab();
+      shortcut = string();
+    }
 
     var modifiers;
     if (arrow()) {
@@ -139,8 +136,8 @@ function Parser(sourceText) {
     return newNode;
   }
 
-  function parseFreeTypeNode(start) {
-    var currentTab = start ? 0 : tab();
+  function parseFreeTypeNode() {
+    var currentTab = tab();
 
     var identifier = id();
 
@@ -191,8 +188,8 @@ function Parser(sourceText) {
     return newNode;
   }
 
-  function parseOrNode(start) {
-    var currentTab = start ? 0 : tab();
+  function parseOrNode() {
+    var currentTab = tab();
 
     var orId = id();
 
@@ -234,8 +231,8 @@ function Parser(sourceText) {
     return orNode(orChild, thenChild);
   }
 
-  function parseAndNode(start) {
-    var currentTab = start ? 0 : tab();
+  function parseAndNode() {
+    var currentTab = tab();
 
     var andId = id();
 
@@ -337,11 +334,11 @@ function Parser(sourceText) {
 
       case 'anchor':
         openParen(true);
-        var str = string();
-        if (!str && underscore(true))
+        var val = paramValue();
+        if (!val && underscore(true))
           str = null;
         closeParen(true);
-        return set('anchor', str);
+        return set('anchor', val);
 
       case 'param':
         openParen(true);
@@ -375,6 +372,7 @@ function Parser(sourceText) {
           var val = null;
         closeParen(true);
         return set(identifier, val);
+
       case 'concat':
         openParen(true);
         var identifier = id();
@@ -384,6 +382,14 @@ function Parser(sourceText) {
           var val = null;
         closeParen(true);
         return concat(identifier, val);
+
+      case 'protocol':
+        openParen(true);
+        var val = paramValue();
+        if (!val && underscore(true))
+          val = null;
+        closeParen(true);
+        return set('protocol', val);
     }
 
     if (!isSharp())

@@ -313,7 +313,8 @@ function concat(prop, value) {
 }
 
 function buildUrl(obj) {
-  var url = obj.host;
+  var url = obj.protocol + "://";
+  url += obj.host;
   if (obj.path)
     url += "/" + obj.path;
   var params = Object.keys(obj.params).map(function(k) {
