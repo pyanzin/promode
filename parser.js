@@ -55,6 +55,7 @@ function Parser(sourceText) {
   }
 
   function parseTop() {
+    debugger;
     return standard(true);
   }
 
@@ -127,7 +128,10 @@ function Parser(sourceText) {
     };
 
     while (nextTab - currentTab === 2) {
-      newNode.child(parseNode());
+      var childNode = parseNode();
+      if (childNode === null)
+        break;
+      newNode.child(childNode);
       var preTabPosition = getPosition();
       var nextTab = tab();
       backtrackTo(preTabPosition);
@@ -414,13 +418,22 @@ function Parser(sourceText) {
     closeBrace = BoolParser(CLOSE_BRACE),
     string = ValueParser(STRING),
     arrow = BoolParser(ARROW),
-    tab = ValueParser(TAB),
     underscore = BoolParser(UNDERSCORE),
     semicolon = BoolParser(SEMICOLON),
     endOfFile = BoolParser(FILE_END),
     isSharp = BoolParser(SHARP),
     isEqual = BoolParser(EQUAL);
 
+  function tab() {
+    var preTabPosition = getPosition();    
+    var token = getToken();
+    if (token.type === TAB)
+      return token.value;
+    else {
+      backtrackTo(preTabPosition);
+      return 0;
+    }
+  }
 
   function BoolParser(type) {
     return function(isRequired) {
@@ -537,6 +550,8 @@ function Parser(sourceText) {
 
         backtrack(1);
         return getToken();
+      case '\r':
+        getNextChar();
       case '\n':
         var tabCount = 0;
 
@@ -548,7 +563,7 @@ function Parser(sourceText) {
         }
 
         backtrack(1);
-        if (ch === '/' || ch === '\n')
+        if (ch === '/' || ch === '\n' || ch === '\r')
             return getToken();
 
         if (tabCount % 2 !== 0)
