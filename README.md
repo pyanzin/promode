@@ -1,13 +1,14 @@
-# promode
-Quich site navigation
+# qnav
 
-If you are so happy using modern interfaces...
+Navigate the web faster!
 
-Define your keyboard shortcuts like this:
+Define your shortcuts like this:
 
 ``` javascript
 // Google Translate
-'$t$ranslate' -> {host('https://translate.google.com'); anchor('{from}/{to}/{text}')}
+-> protocol('https')
+
+'$t$ranslate' -> {host('translate.google.com'); anchor('{from}/{to}/{text}')}
   or
     'from $russian' -> replace(anchor, '{from}', 'ru')
     'from $english' -> replace(anchor, '{from}', 'en')

@@ -23,27 +23,31 @@
       <input id="qnav-input" type="text" oninput="ontype(this.value)" />
     </div>
     <div id="scriptWrapper" style="display: none">
-        <div id="script">'$news'
-  '$yandex' -&gt; host('https://news.yandex.ru')
-  '$bbc' -&gt; host('https://bbc.com')
-  '$cnn' -&gt; host('https://cnn.com')
+        <div id="script">
+-&gt; protocol('https')
+-&gt; #http = protocol('http')
+
+'$news'
+  '$yandex' -&gt; host('news.yandex.ru')
+  '$bbc' -&gt; host('bbc.com')
+  '$cnn' -&gt; host('cnn.com')
 
 // Music
 '$music'
-  '$groove' -&gt; host('http://groovemp3.com')
+  '$groove' -&gt; { #http(); host('groovemp3.com') }
     '$artist' -&gt; path('artist/{artist}')
       freetype -&gt; replace(path, '{artist}', _)
-  '$vk' -&gt; {host('https://vk.com'); path('audio')}
+  '$vk' -&gt; {host('vk.com'); path('audio')}
     freetype -&gt; param('q', _)
 
 // Instagram
-'$instagram' -&gt; host('https://instagram.com')
+'$instagram' -&gt; host('instagram.com')
   'by $nickname' -&gt; path('{nickname}')
     freetype -&gt; replace(path, '{nickname}', _)
   'by $tag' -&gt; path('explore/tags/{tag}')
     freetype -&gt; replace(path, '{tag}', _)
 
-'$wikipedia' -&gt; {host('https://{lang}.wikipedia.org'); set(lang, 'en')}
+'$wikipedia' -&gt; {host('{lang}.wikipedia.org'); set(lang, 'en')}
   and
     '$language'
       '$russian' -&gt; set(lang, 'ru')
@@ -61,20 +65,20 @@
 
 '$search'
   '$images'
-    'on $google' -&gt; {host('https://google.com'); param('tbm', 'isch'); param('sa', 'X')}
+    'on $google' -&gt; {host('google.com'); param('tbm', 'isch'); param('sa', 'X')}
       freetype -&gt; {path('search'); param('q', _)}
-  'on $google' -&gt; host('https://google.com')
+  'on $google' -&gt; host('google.com')
     freetype -&gt; {path('search'); param('q', _)}
-  'on $yandex' -&gt; host('https://yandex.ru')
+  'on $yandex' -&gt; host('yandex.ru')
     freetype -&gt; {path('search'); }
-  'on $duckduckgo' -&gt; host('https://duckduckgo.com')
+  'on $duckduckgo' -&gt; host('duckduckgo.com')
     freetype -&gt; param('q', _)
-  'on $stack$overflow' -&gt; host('http://stackoverflow.com')
+  'on $stack$overflow' -&gt; { #http(); host('stackoverflow.com') }
     freetype -&gt; {path('search'); param('q', _)}
 
 // Google Translate
 // trgegenau
-'$t$ranslate' -&gt; {host('https://translate.google.com'); anchor('{from}/{to}/{text}')}
+'$t$ranslate' -&gt; {host('translate.google.com'); anchor('{from}/{to}/{text}')}
   or
     'from $russian' -&gt; replace(anchor, '{from}', 'ru')
     'from $english' -&gt; replace(anchor, '{from}', 'en')
@@ -93,10 +97,10 @@
       freetype -&gt; replace(anchor, '{text}', _)
   freetype -&gt; {replace(anchor, '{from}', 'en'); replace(anchor, '{to}', 'ru'); replace(anchor, '{text}', _)}
 
-'$o$xford dictionary' -&gt; { host('https://en.oxforddictionaries.com'); path('definition/{word}') }
+'$o$xford dictionary' -&gt; { host('en.oxforddictionaries.com'); path('definition/{word}') }
   freetype -&gt; replace(path, '{word}', _)
 
-freetype -&gt; {host('https://google.com'); path('search'); param('q', _)}
+freetype -&gt; {host('google.com'); path('search'); param('q', _)}
       </div>
       </div>
     </div>
