@@ -55,7 +55,6 @@ function Parser(sourceText) {
   }
 
   function parseTop() {
-    debugger;
     return standard(true);
   }
 
@@ -121,7 +120,11 @@ function Parser(sourceText) {
 
     backtrackTo(preTabPosition);
 
-    var newNode = node(shortcut);
+    var newNode;
+    if (isTop)
+      newNode = aggregatorNode();
+    else
+      newNode = node(shortcut);
 
     for (var i = 0; i < modifiers.length; i++) {
       newNode.modifier(modifiers[i]);
@@ -200,7 +203,7 @@ function Parser(sourceText) {
     if (orId !== 'or')
       return null;
 
-    var orChild = node('');
+    var orChild = aggregatorNode();
 
     var preTabPosition = getPosition();
     var nextTab = tab();
@@ -219,7 +222,7 @@ function Parser(sourceText) {
     if (thenId !== 'then')
       error('\'then\' block expected after \'or\' block');
 
-    var thenChild = node('');
+    var thenChild = aggregatorNode();
 
     preTabPosition = getPosition();
     nextTab = tab();
@@ -243,7 +246,7 @@ function Parser(sourceText) {
     if (andId !== 'and')
       return null;
 
-    var andChild = node('');
+    var andChild = aggregatorNode();
 
     var preTabPosition = getPosition();
     var nextTab = tab();
@@ -262,7 +265,7 @@ function Parser(sourceText) {
     if (thenId !== 'then')
       error('\'then\' block expected after \'and\' block');
 
-    var thenChild = node('');
+    var thenChild = aggregatorNode();
 
     preTabPosition = getPosition();
     nextTab = tab();

@@ -10,7 +10,7 @@ function addElement(elem, depth) {
 
 // makes standard node from shortcut passed
 function node(shortcut) { 
-  var re = /\$([a-zA-Z0-9\/ ]{1})/g;
+  var re = /\$([a-zA-Z0-9\/ \.\']{1})/g;
   var keys = shortcut.match(re) || [];
   var prefix = "";
   var note = shortcut;
@@ -41,15 +41,11 @@ function node(shortcut) {
     traverse: function(pattern, position, depth) {
       var that = this;
 
-      if (pattern.length < position && prefix.length > 0) {
-        return parseResult(0, [addElement(that.possibleElem, depth)]);      
-      }
-
-      var isMatch = this.match(pattern, position);
+      var isMatch = that.match(pattern, position);
       if (!isMatch)
         return null;
 
-      if (this.children.length === 0)
+      if (that.children.length === 0)
         return parseResult(
           that.prefix.length,
           that.modifiers.concat([addElement(that.passedElem, depth)])
@@ -58,19 +54,21 @@ function node(shortcut) {
       if (pattern.length <= that.prefix.length + position) {
         var possibleResults = parseResult();
         for (var i = 0; i < that.children.length; ++i) {
-          possibleResults = merge(possibleResults, that.children[i].traverse(
-            pattern, position + that.prefix.length + 1, depth + shortcut.length > 0 ? 1 : 0));
-        }     
+          possibleResults = merge(
+            possibleResults,
+            that.children[i].asPossible(depth + (shortcut.length > 0 ? 1 : 0)));
+        } 
 
-        return merge(parseResult(
+        var currentResult = parseResult(
             that.prefix.length,
             that.modifiers.concat(pattern.length > 0 ? [addElement(that.passedElem, depth)] : [])
-          ),
-        possibleResults);
+        );
+
+        return merge(currentResult, possibleResults);
       }
 
       for (var i = 0; i < that.children.length; ++i) {
-        var result = that.children[i].traverse(pattern, position + that.prefix.length, depth + shortcut.length > 0 ? 1 : 0);
+        var result = that.children[i].traverse(pattern, position + that.prefix.length, depth + (shortcut.length > 0 ? 1 : 0));
         if (result !== null)
           return merge(
             parseResult(that.prefix.length, that.modifiers.concat(pattern.length > 0 ? [addElement(that.passedElem, depth)] : [])),
@@ -79,6 +77,9 @@ function node(shortcut) {
       };
 
       return null;
+    },
+    asPossible: function(depth) {      
+      return parseResult(0, [addElement(this.possibleElem, depth)]);
     }
   };
 }
@@ -105,13 +106,15 @@ function orNode(orBody, thenBody) {
     traverse: function(pattern, position, depth) {
       var that = this;
 
-      if (pattern.length <= position) {
-        return orBody.traverse(pattern, position + 1, depth);
-      }
+      if (pattern.length <= position)
+        return that.asPossible(depth);
 
       var orResult = orBody.traverse(pattern, position, depth);
       if (orResult === null)
         return null;
+
+      if (pattern.length <= position + orResult.parsed)
+        return merge(orResult, thenBody.asPossible(depth));      
 
       var thenResult = thenBody.traverse(pattern, position + orResult.parsed, depth + 1);
 
@@ -119,6 +122,9 @@ function orNode(orBody, thenBody) {
         return null;
 
       return merge(orResult, thenResult);
+    },
+    asPossible: function(depth) {      
+      return orBody.asPossible(depth);
     }
   };
 }
@@ -135,14 +141,19 @@ function andNode(andBody, thenBody) {
           andResult = merge(andResult, result);
         else
           break;
-      }
+      };
 
       var thenResult = thenBody.traverse(pattern, position + andResult.parsed, depth + 1);
 
       if (thenResult === null)
-        return null;
+        return merge(andResult, that.asPossible(depth));
 
       return merge(andResult, thenResult);
+    },
+    asPossible: function(depth) {      
+      return merge(
+        andBody.asPossible(depth),
+        thenBody.asPossible(depth));
     }
   };
 }
@@ -211,6 +222,55 @@ function freetype(terminator) {
             result
           );
       };
+    },
+    asPossible: function(depth) {
+      var terminatorPiece = terminator
+                        ? '<span class="key">' + terminator + '</span>'
+                        : '';
+
+      var freetypePossible = $('<span style="background-color: ' +
+        toColor("freetype") + '" class="node-passed">' + terminatorPiece + '</span>');
+
+      return parseResult(0, [addElement(freetypePossible)]);
+    }
+  };
+}
+
+function aggregatorNode () {
+  return {
+    children: [],
+    modifiers: [], 
+    child: function(newChild) {
+      this.children.push(newChild);
+      return this;
+    },
+    modifier: function(newModifier) {
+      this.modifiers.push(newModifier);
+      return this;
+    },
+    traverse: function(pattern, position, depth) {
+      var that = this;
+
+      if (pattern.length <= position)
+        return that.asPossible(depth);
+
+      for (var i = 0; i < that.children.length; ++i) {
+        var childResult = that.children[i].traverse(pattern, position, depth);
+        if (childResult !== null)
+          return merge(parseResult(0, that.modifiers), childResult);
+      };
+
+      return null;
+    },
+    asPossible: function(depth) {
+      var result = parseResult();
+      for (var i = 0; i < this.children.length; ++i) {
+        result = merge(
+          result,
+          this.children[i].asPossible(depth)
+        );
+      };
+      return result;
     }
   };
 }
