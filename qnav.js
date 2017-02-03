@@ -54,9 +54,9 @@ function node(shortcut) {
       if (pattern.length <= that.prefix.length + position) {
         var possibleResults = parseResult();
         for (var i = 0; i < that.children.length; ++i) {
-          possibleResults = merge(
-            possibleResults,
-            that.children[i].asPossible(depth + (shortcut.length > 0 ? 1 : 0)));
+          var childResult = that.children[i].asPossible(depth + (shortcut.length > 0 ? 1 : 0));
+          if (childResult !== null) 
+            possibleResults = merge(possibleResults,childResult);
         } 
 
         var currentResult = parseResult(
@@ -187,14 +187,14 @@ function freetype(terminator) {
         function(m) { return function(result) { m(result, matchText); };
       });
 
-      var mods = mods.concat([addElement(freetypeElement, depth)]);
-
       var terminatorPiece = terminator
                               ? '<span class="key">' + terminator + '</span>'
                               : '';
       
       var freetypeElement = $('<span style="background-color: ' +
         toColor("freetype") + '" class="node-passed">'+ matchText + terminatorPiece + '</span>');
+
+      var mods = mods.concat([addElement(freetypeElement, depth)]);
 
       var termLength = terminator ? terminator.length : 0;
 
@@ -210,7 +210,8 @@ function freetype(terminator) {
 
         return merge(
           parseResult( matchText.length + termLength, mods.concat([addElement(freetypeElement, depth)])),
-          possibleResults);
+          possibleResults
+        );
       }
 
       for (var i = 0; i < that.children.length; ++i) {
@@ -250,9 +251,6 @@ function aggregatorNode () {
     },
     traverse: function(pattern, position, depth) {
       var that = this;
-
-      if (pattern.length <= position)
-        return that.asPossible(depth);
 
       for (var i = 0; i < that.children.length; ++i) {
         var childResult = that.children[i].traverse(pattern, position, depth);

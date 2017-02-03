@@ -120,11 +120,7 @@ function Parser(sourceText) {
 
     backtrackTo(preTabPosition);
 
-    var newNode;
-    if (isTop)
-      newNode = aggregatorNode();
-    else
-      newNode = node(shortcut);
+    var newNode = node(shortcut);
 
     for (var i = 0; i < modifiers.length; i++) {
       newNode.modifier(modifiers[i]);
