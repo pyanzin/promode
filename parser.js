@@ -603,7 +603,7 @@ function Parser(sourceText) {
       do {
         id += ch;
         ch = getNextChar();
-      } while (ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z');
+      } while (ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z' || ch >= '0' && ch <= '9');
 
       backtrack(1);
       return { type: ID, value: id };

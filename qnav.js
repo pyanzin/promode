@@ -48,7 +48,7 @@ function node(shortcut) {
       if (that.children.length === 0)
         return parseResult(
           that.prefix.length,
-          that.modifiers.concat([addElement(that.passedElem, depth)])
+          that.modifiers.concat([addElement(that.passedElem, depth), parsed(prefix.length, toColor(prefix))])
         );
 
       if (pattern.length <= that.prefix.length + position) {
@@ -56,12 +56,12 @@ function node(shortcut) {
         for (var i = 0; i < that.children.length; ++i) {
           var childResult = that.children[i].asPossible(depth + (shortcut.length > 0 ? 1 : 0));
           if (childResult !== null) 
-            possibleResults = merge(possibleResults,childResult);
+            possibleResults = merge(possibleResults, childResult);
         } 
 
         var currentResult = parseResult(
             that.prefix.length,
-            that.modifiers.concat(pattern.length > 0 ? [addElement(that.passedElem, depth)] : [])
+            that.modifiers.concat(pattern.length > 0 ? [addElement(that.passedElem, depth), parsed(prefix.length, toColor(prefix))] : [])
         );
 
         return merge(currentResult, possibleResults);
@@ -71,7 +71,8 @@ function node(shortcut) {
         var result = that.children[i].traverse(pattern, position + that.prefix.length, depth + (shortcut.length > 0 ? 1 : 0));
         if (result !== null)
           return merge(
-            parseResult(that.prefix.length, that.modifiers.concat(pattern.length > 0 ? [addElement(that.passedElem, depth)] : [])),
+            parseResult(that.prefix.length, that.modifiers.concat(pattern.length > 0 ?
+              [addElement(that.passedElem, depth), parsed(prefix.length, toColor(prefix))] : [])),
             result
           );
       };
@@ -187,14 +188,16 @@ function freetype(terminator) {
         function(m) { return function(result) { m(result, matchText); };
       });
 
+      var color = toColor("freetype");
+
       var terminatorPiece = terminator
                               ? '<span class="key">' + terminator + '</span>'
                               : '';
       
       var freetypeElement = $('<span style="background-color: ' +
-        toColor("freetype") + '" class="node-passed">'+ matchText + terminatorPiece + '</span>');
+        color + '" class="node-passed">'+ matchText + terminatorPiece + '</span>');
 
-      var mods = mods.concat([addElement(freetypeElement, depth)]);
+      var mods = mods.concat([addElement(freetypeElement, depth), parsed(matchText.length, color)]);
 
       var termLength = terminator ? terminator.length : 0;
 
@@ -209,7 +212,7 @@ function freetype(terminator) {
         }
 
         return merge(
-          parseResult( matchText.length + termLength, mods.concat([addElement(freetypeElement, depth)])),
+          parseResult(matchText.length + termLength, mods.concat([addElement(freetypeElement, depth)])),
           possibleResults
         );
       }
@@ -370,6 +373,15 @@ function concat(prop, value) {
     }
 }
 
+function parsed(count, color) {
+  return function(obj) {
+    obj.ribbon.push({
+      count: count,
+      color: color
+    });
+  }
+}
+
 function buildUrl(obj) {
   var url = obj.protocol + "://";
   url += obj.host;
@@ -393,7 +405,8 @@ function emptyUrl() {
     params : {},
     anchor: "",
     newWindow: false,
-    elements: {}
+    elements: {},
+    ribbon: []
   };
 }
 
@@ -417,16 +430,34 @@ function ontype(pattern) {
       m(urlObj);
     });
 
+    qnav.ribbon = urlObj.ribbon;
+
     var url = buildUrl(urlObj);
     qnav.url = url;
     qnav.urlObj = urlObj;
     $("#qnav-url").text(url);
+
+    renderRibbon(qnav.ribbon);
 
     renderElemTree(urlObj.elements);
   } else {
     $("#qnav-url").text("");
   };
  
+}
+
+function renderRibbon(models) {
+  var ribbon = $("#ribbon");
+  ribbon.html("");
+  models.forEach(function(m) {
+    if (m.count === 0) 
+      return;
+    var elem = $("<span></span>");
+    elem.css("width", 1.66 * m.count + "em");
+    elem.css("background-color", m.color);
+
+    ribbon.append(elem);
+  });
 }
 
 function renderElemTree(elementsObj) {

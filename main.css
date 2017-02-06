@@ -1,5 +1,8 @@
-  body {
+  * {
     font-family: monospace;
+  }
+
+  body {    
     background-color: whitesmoke;
   }
 
@@ -89,4 +92,18 @@
 #saveScriptBtn {
   width: 8em;
   height: 3.5em;
+}
+
+#ribbon {
+  display: flex;
+}
+
+#ribbon span {
+  display: block;
+  width: 2em;
+  height: .3em;
+}
+
+input, button {
+  outline: none;
 }
