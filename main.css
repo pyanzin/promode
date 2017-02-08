@@ -2,9 +2,16 @@
     font-family: monospace;
   }
 
-  body {    
+html, body
+{
     background-color: whitesmoke;
-  }
+
+    width: 100%;
+    height: 100%;
+    
+    margin: 0;
+    padding: 0;
+}
 
   .node-passed {
     display: inline-block;
@@ -39,8 +46,11 @@
   }
 
   #script { 
+    position: absolute;
     width: 1000px;
-    height: 800px;
+    height: 100%;
+    top: 0;
+
   }
 
   #tree {
@@ -48,16 +58,38 @@
   }
 
   #wrapper {
+    width: 100%;
+    height: 100%;
+
     display: flex;
+
+    flex: 1;
     flex-direction: column;
+    
+    justify-content: flex-start;
+    align-items: stretch; 
+    align-content: stretch;
   }
 
   #header {
+    background-color: #eee;
     display: flex;
     flex-direction: row wrap;
     justify-content: space-between;
-    padding: .5em;
+    padding: 1em;
   }
+
+#footer {
+  background-color: #eee;
+  display: flex;
+  flex-direction: row wrap;
+  justify-content: center;
+  padding: 1em;
+}
+
+#footer span {
+  padding: 1em;
+}
 
   #header h1 {
     display: inline;
@@ -65,19 +97,35 @@
   }
 
   #treeWrapper {
-    height: 700px;
-    width: 1000px;
+    width: 100%;
+    height: 100%;
+
+    flex: 1;
+
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-around;
   }
 
   #scriptWrapper {
     display: none;
     flex-direction: column;
     align-items: center;
+    position: relative;
+    height: 100%;
+    width: 100%;
   }
+
+#content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    
+    justify-content: flex-start;
+    align-items: stretch;
+    align-content: stretch;
+}
 
   #qnav-input {
     font-size: 3em;
