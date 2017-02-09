@@ -474,8 +474,21 @@ function renderElemTree(elementsObj) {
 }
 
 $(function() {
-  $('#qnav-input').keypress(function (e) {
-     if (e.which === 13 && qnav.url) {
+  function updateHistory(newEntry) {
+    var history = qnav.history;
+    if (history[history.length - 1] === newEntry)
+      return;
+
+    if (history.length >= 10)
+      history = history.splice(1);
+    history.push(newEntry);
+
+    localStorage.patternHistory = history.join("\n");
+  }
+
+  $('#qnav-input').keydown(function (e) {
+     if (e.which === 13 && qnav.url) { // Enter
+        updateHistory($("#qnav-input").val());
         if (qnav.urlObj.newWindow) {
             var win = window.open(qnav.url, '_blank');
             if (qnav.urlObj.focus)
@@ -485,6 +498,23 @@ $(function() {
         }
 
         //window.location.href = qnav.url;
+    } else if (e.which === 40) { // Arrow down
+      var len = qnav.history.length;
+      var index = qnav.historyIndex;
+      index = (index + 1) % len;
+      $("#qnav-input").val(qnav.history[len - index - 1]);
+      ontype(qnav.history[len - index - 1]);
+      qnav.historyIndex = index;
+    } else if (e.which === 38) { // Arrow up
+      var len = qnav.history.length;
+      var index = qnav.historyIndex;
+      index = (index - 1 + len) % len;
+      $("#qnav-input").val(qnav.history[len - index - 1]);
+      ontype(qnav.history[len - index - 1]);
+      qnav.historyIndex = index;
+    } else if (e.which === 27) { // Esc
+      $("#qnav-input").val("");
+      ontype("");
     };
   });
 
@@ -501,6 +531,13 @@ $(function() {
     editor.setValue(localStorage.script);
   else
     localStorage.script = editor.getValue();
+  
+  var history = localStorage.patternHistory;
+  if (history)
+    qnav.history = history.split("\n");
+  else
+    qnav.history = [];
+  qnav.historyIndex = -1;
 
   $("#qnav-input").focus();
   onSaveScript();  
