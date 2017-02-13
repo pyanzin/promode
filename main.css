@@ -53,9 +53,19 @@ html, body
 
   }
 
-  #tree {
-    margin: 12px;
+  #passedElements {
+    padding: 12px;
+    background-color: #ccc;
+    height: 6em;
+    width: 80em;
+    border-radius: 1em;
   }
+
+#possibleElements {
+    padding: 12px;
+    height: 6em;
+    width: 80em;
+}
 
   #wrapper {
     width: 100%;

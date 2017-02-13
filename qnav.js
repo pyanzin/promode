@@ -1,10 +1,14 @@
-
-
-// returns modifier which adds element at the passed depth
-function addElement(elem, depth) {
+function addPossible(elem) {
   return function(urlObj) {
-    urlObj.elements[depth] = urlObj.elements[depth] || [];
-    urlObj.elements[depth].push(elem);
+    urlObj.possibleElements = urlObj.possibleElements || [];
+    urlObj.possibleElements.push(elem);
+  }
+}
+
+function addPassed(elem) {
+  return function(urlObj) {
+    urlObj.passedElements = urlObj.passedElements || [];
+    urlObj.passedElements.push(elem);
   }
 }
 
@@ -48,7 +52,7 @@ function node(shortcut) {
       if (that.children.length === 0)
         return parseResult(
           that.prefix.length,
-          that.modifiers.concat([addElement(that.passedElem, depth), parsed(prefix.length, toColor(prefix))])
+          that.modifiers.concat([addPassed(that.passedElem), parsed(prefix.length, toColor(prefix))])
         );
 
       if (pattern.length <= that.prefix.length + position) {
@@ -61,7 +65,7 @@ function node(shortcut) {
 
         var currentResult = parseResult(
             that.prefix.length,
-            that.modifiers.concat(pattern.length > 0 ? [addElement(that.passedElem, depth), parsed(prefix.length, toColor(prefix))] : [])
+            that.modifiers.concat(pattern.length > 0 ? [addPassed(that.passedElem), parsed(prefix.length, toColor(prefix))] : [])
         );
 
         return merge(currentResult, possibleResults);
@@ -72,7 +76,7 @@ function node(shortcut) {
         if (result !== null)
           return merge(
             parseResult(that.prefix.length, that.modifiers.concat(pattern.length > 0 ?
-              [addElement(that.passedElem, depth), parsed(prefix.length, toColor(prefix))] : [])),
+              [addPassed(that.passedElem, depth), parsed(prefix.length, toColor(prefix))] : [])),
             result
           );
       };
@@ -80,7 +84,7 @@ function node(shortcut) {
       return null;
     },
     asPossible: function(depth) {      
-      return parseResult(0, [addElement(this.possibleElem, depth)]);
+      return parseResult(0, [addPossible(this.possibleElem, depth)]);
     }
   };
 }
@@ -197,7 +201,7 @@ function freetype(terminator) {
       var freetypeElement = $('<span style="background-color: ' +
         color + '" class="node-passed">'+ matchText + terminatorPiece + '</span>');
 
-      var mods = mods.concat([addElement(freetypeElement, depth), parsed(matchText.length, color)]);
+      var mods = mods.concat([addPassed(freetypeElement, depth), parsed(matchText.length, color)]);
 
       var termLength = terminator ? terminator.length : 0;
 
@@ -212,7 +216,7 @@ function freetype(terminator) {
         }
 
         return merge(
-          parseResult(matchText.length + termLength, mods.concat([addElement(freetypeElement, depth)])),
+          parseResult(matchText.length + termLength, mods.concat([addPassed(freetypeElement, depth)])),
           possibleResults
         );
       }
@@ -235,7 +239,7 @@ function freetype(terminator) {
       var freetypePossible = $('<span style="background-color: ' +
         toColor("freetype") + '" class="node-passed">' + terminatorPiece + '</span>');
 
-      return parseResult(0, [addElement(freetypePossible)]);
+      return parseResult(0, [addPossible(freetypePossible)]);
     }
   };
 }
@@ -405,7 +409,8 @@ function emptyUrl() {
     params : {},
     anchor: "",
     newWindow: false,
-    elements: {},
+    passedElements: [],
+    possibleElements: [],
     ribbon: []
   };
 }
@@ -439,7 +444,8 @@ function ontype(pattern) {
 
     renderRibbon(qnav.ribbon);
 
-    renderElemTree(urlObj.elements);
+    renderPassed(urlObj.passedElements);
+    renderPossible(urlObj.possibleElements);
   } else {
     $("#qnav-url").text("");
   };
@@ -460,17 +466,20 @@ function renderRibbon(models) {
   });
 }
 
-function renderElemTree(elementsObj) {
-  $("#tree").text("");
+function renderPassed(elements) {
+  $("#passedElements").text("");
   var i = 0;
-  var rowElements;
-  while(rowElements = elementsObj[i++]) {
-    var row = $('<div class="treeLevel"></div>');
-    for (var j = 0; j < rowElements.length; j++) {
-      row.append(rowElements[j]);
-    };
-    $("#tree").append(row);
-  }
+  elements.forEach(function(x) {
+     $("#passedElements").append(x);
+  });
+}
+
+function renderPossible(elements) {
+  $("#possibleElements").text("");
+  var i = 0;
+  elements.forEach(function(x) {
+     $("#possibleElements").append(x);
+  });
 }
 
 $(function() {
