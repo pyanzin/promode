@@ -142,12 +142,7 @@ html, body
     width: 16em;
   }
 
-#editScriptBtn {
-  width: 8em;
-  height: 3.5em;
-}
-
-#saveScriptBtn {
+.btn {
   width: 8em;
   height: 3.5em;
 }

@@ -13,8 +13,11 @@
   <body>
   <div id="wrapper">
     <div id="header"><h1>&#9875; Quick Navigation Club</h1>
-      <input id="editScriptBtn" type="button" value="Edit Script" onclick="onEditScript()" />
-      <input id="saveScriptBtn" type="button" value="Save" onclick="onSaveScript()" style="display: none" />
+      <input id="editScriptBtn" class="btn" type="button" value="Edit Script" onclick="onEditScript()" />
+      <div id="scriptEditButtons">
+        <input id="cancelBtn" class="btn" type="button" value="Cancel" onclick="onCancel()" />
+        <input id="saveScriptBtn" type="button" class="btn" value="Save" onclick="onSaveScript()" />
+      </div>
     </div>
     <div id="content">
     <div id="treeWrapper">

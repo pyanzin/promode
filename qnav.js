@@ -562,7 +562,7 @@ function onSaveScript () {
     localStorage.script = editor.getValue();
 
     $("#editScriptBtn").css("display", "block");
-    $("#saveScriptBtn").css("display", "none");
+    $("#scriptEditButtons").css("display", "none");
 
     $("#treeWrapper").css("display", "flex");
     $("#scriptWrapper").css("display", "none");
@@ -581,11 +581,25 @@ function onSaveScript () {
 
 }
 
+function onCancel() {
+  editor.setValue(localStorage.script);
+
+    $("#editScriptBtn").css("display", "block");
+    $("#scriptEditButtons").css("display", "none");
+
+    $("#treeWrapper").css("display", "flex");
+    $("#scriptWrapper").css("display", "none");
+
+    $("#qnav-input").focus();  
+
+    $('#tree').text("");
+}
+
 function onEditScript() {
   editor.setValue(localStorage.script);
 
   $("#editScriptBtn").css("display", "none");
-  $("#saveScriptBtn").css("display", "block");
+  $("#scriptEditButtons").css("display", "block");
 
   $("#treeWrapper").css("display", "none");
   $("#scriptWrapper").css("display", "flex");
