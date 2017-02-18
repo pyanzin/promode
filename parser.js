@@ -212,14 +212,17 @@ function Parser(sourceText) {
       backtrackTo(preTabPosition);
     };
 
+    var preThenPosition = getPosition();
     var thenTab = tab();
     var thenId = id();
 
-    if (thenId !== 'then')
-      error('\'then\' block expected after \'or\' block');
-
     var thenChild = aggregatorNode();
 
+    if (thenId !== 'then') {
+      backtrackTo(preThenPosition);
+      return orNode(orChild, thenChild);
+    }
+    
     preTabPosition = getPosition();
     nextTab = tab();
     backtrackTo(preTabPosition);
@@ -255,13 +258,17 @@ function Parser(sourceText) {
       backtrackTo(preTabPosition);
     };
 
+    var preThenPosition = getPosition();
+
     var thenTab = tab();
     var thenId = id();
 
-    if (thenId !== 'then')
-      error('\'then\' block expected after \'and\' block');
-
     var thenChild = aggregatorNode();
+
+    if (thenId !== 'then') {
+      backtrackTo(preThenPosition);
+      return andNode(andChild, thenChild);
+    }
 
     preTabPosition = getPosition();
     nextTab = tab();
@@ -287,6 +294,7 @@ function Parser(sourceText) {
       while (true) {
         var newMod = modifier();
         if (!newMod) {
+          semicolon();
           closeBrace();
           return newModifiers;
         } else {        
