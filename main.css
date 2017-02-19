@@ -145,6 +145,14 @@ html, body
 .btn {
   width: 8em;
   height: 3.5em;
+  background-color: gray;
+  color: white;
+  border-style: none;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #bbb;
 }
 
 #ribbon {
