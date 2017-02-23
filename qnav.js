@@ -29,8 +29,8 @@ function node(shortcut) {
     children: [],
     modifiers: [],
     prefix: prefix,
-    possibleElem: $('<span style="border-color: ' + toColor(prefix) + '" class="node-possible">' + note + '</span>'),
-    passedElem: $('<span style="background-color: ' + toColor(prefix) + '"  class="node-passed">' + note + '</span>'),
+    possibleElem: $('<span style="border-color: ' + toMainColor(prefix) + '; background-color: ' + toAuxColor(prefix) + '" class="node-possible">' + note + '</span>'),
+    passedElem: $('<span style="background-color: ' + toMainColor(prefix) + '"  class="node-passed">' + note + '</span>'),
     match: function(pattern, position) {    
       return pattern.startsWith(this.prefix, position);
     },    
@@ -52,7 +52,7 @@ function node(shortcut) {
       if (that.children.length === 0)
         return parseResult(
           that.prefix.length,
-          that.modifiers.concat([addPassed(that.passedElem), parsed(prefix.length, toColor(prefix))])
+          that.modifiers.concat([addPassed(that.passedElem), parsed(prefix.length, toMainColor(prefix))])
         );
 
       if (pattern.length <= that.prefix.length + position) {
@@ -65,7 +65,7 @@ function node(shortcut) {
 
         var currentResult = parseResult(
             that.prefix.length,
-            that.modifiers.concat(pattern.length > 0 ? [addPassed(that.passedElem), parsed(prefix.length, toColor(prefix))] : [])
+            that.modifiers.concat(pattern.length > 0 ? [addPassed(that.passedElem), parsed(prefix.length, toMainColor(prefix))] : [])
         );
 
         return merge(currentResult, possibleResults);
@@ -76,7 +76,7 @@ function node(shortcut) {
         if (result !== null)
           return merge(
             parseResult(that.prefix.length, that.modifiers.concat(pattern.length > 0 ?
-              [addPassed(that.passedElem, depth), parsed(prefix.length, toColor(prefix))] : [])),
+              [addPassed(that.passedElem, depth), parsed(prefix.length, toMainColor(prefix))] : [])),
             result
           );
       };
@@ -192,7 +192,7 @@ function freetype(terminator) {
         function(m) { return function(result) { m(result, matchText); };
       });
 
-      var color = toColor("freetype");
+      var color = toMainColor("freetype");
 
       var terminatorPiece = terminator
                               ? '<span class="key">' + terminator + '</span>'
@@ -237,7 +237,7 @@ function freetype(terminator) {
                         : '';
 
       var freetypePossible = $('<span style="background-color: ' +
-        toColor("freetype") + '" class="node-passed">' + terminatorPiece + '</span>');
+        toMainColor("freetype") + '" class="node-passed">' + terminatorPiece + '</span>');
 
       return parseResult(0, [addPossible(freetypePossible)]);
     }
@@ -415,13 +415,21 @@ function emptyUrl() {
   };
 }
 
-function toColor(s) {
+function toHue(s) {
   var res = 0;
   for (var i = 0; i < s.length; ++i) {
     res += (s.charCodeAt(i) - 97) * 255 / 24 * Math.pow(2, -i + 1);
   };
 
-  return "hsla(" + res % 256 + ", 58%, 70%, 1)";
+  return res % 256;
+}
+
+function toMainColor(s) {
+  return "hsla(" + toHue(s) + ", 58%, 70%, 1)";
+}
+
+function toAuxColor(s) {
+  return "hsla(" + toHue(s) + ", 58%, 90%, 1)";
 }
 
 var qnav = {};
@@ -532,6 +540,9 @@ $(function() {
   editor.getSession().setMode("ace/mode/python");
   editor.setOption('tabSize', 2);
   editor.setShowPrintMargin(false);
+  editor.setOptions({
+    enableBasicAutocompletion: true
+});
   //localStorage.script = editor.getValue();
   // this shows all invisibles, but only the spaces are required
   //editor.setOption('showInvisibles', true);
