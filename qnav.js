@@ -14,7 +14,7 @@ function addPassed(elem) {
 
 // makes standard node from shortcut passed
 function node(shortcut) { 
-  var re = /\$([a-zA-Z0-9\/ \.\']{1})/g;
+  var re = /\$([a-zA-Z0-9\/ \.\'\:]{1})/g;
   var keys = shortcut.match(re) || [];
   var prefix = "";
   var note = shortcut;
@@ -357,7 +357,7 @@ function add(prop, key, value) {
       else 
         valueStr = value;
       obj[prop] = obj[prop] || {};
-      obj[prop][key] = value;
+      obj[prop][key] = valueStr;
     }
 }
 
