@@ -495,7 +495,8 @@ function Parser(sourceText) {
     var ex = {
       text: text,
       row: colRow.row,
-      col: colRow.col
+      col: colRow.col,
+      isParserError: true
     };
 
     throw ex;
