@@ -17,7 +17,11 @@ function Parser(sourceText) {
     COMMA = 10,
     FILE_END = 11,
     SHARP = 12,
-    EQUAL = 13;
+    EQUAL = 13,
+    PLUS = 14,
+    SLASH = 15,
+    PLUS_EQUAL = 16,
+    SLASH_EQUAL = 17;
 
   function tokenToString(n) {
     switch (n) {
@@ -49,6 +53,14 @@ function Parser(sourceText) {
         return "SHARP";
       case EQUAL:
         return "EQUAL";
+      case PLUS:
+        return "PLUS";
+      case SLASH:
+        return "SLASH";
+      case PLUS_EQUAL:
+        return "PLUS_EQUAL";
+      case SLASH_EQUAL:
+        return "SLASH_EQUAL";
       default:
         return null;
     }
