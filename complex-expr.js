@@ -22,6 +22,14 @@ function Sum(left, right) {
 	};
 }
 
+function Slash(left, right) {
+	return {
+		compile: function() {
+			return left.compile() + " + '/' + " + right.compile();
+		}
+	};
+}
+
 function Str(name) {
 	return {
 		compile: function() {
