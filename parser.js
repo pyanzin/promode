@@ -428,6 +428,60 @@ function Parser(sourceText) {
     return null;
   }
 
+  function topAst() {
+      return Func([exprAst()]);
+  }
+  
+  function exprAst() {
+      return assignAst();
+  }
+
+  function assignAst() {
+      var pos = getPosition();
+
+      var id = idAst();
+      if (id === null || !isEqual()) {
+          backtrackTo(pos);
+          return sumAst();
+      }
+
+      return Assign(id, exprAst());
+  }
+
+  function sumAst() {
+      var pos = getPosition();
+
+      var left = idAst();
+
+      if (!isPlus()) {
+          backtrackTo(pos);
+          return idAst();
+      }
+
+      return Sum(left, sumAst());
+  }
+
+  function idAst() {
+      var pos = getPosition();
+
+      var idName = id();
+
+      if (idName === null) {
+          backtrackTo(pos);
+          return stringAst();
+      }
+
+      return Id(idName);
+  }
+
+  function stringAst() {
+      var str = string();
+
+      if (str === null)
+          wrongToken([ID, STRING]);
+
+      return Str(str);
+  }
 
   var comma = BoolParser(COMMA),
     openParen = BoolParser(OPEN_PAREN),
@@ -441,7 +495,8 @@ function Parser(sourceText) {
     semicolon = BoolParser(SEMICOLON),
     endOfFile = BoolParser(FILE_END),
     isSharp = BoolParser(SHARP),
-    isEqual = BoolParser(EQUAL);
+    isEqual = BoolParser(EQUAL),
+    isPlus = BoolParser(PLUS);
 
   function tab() {
     var preTabPosition = getPosition();    
@@ -617,6 +672,14 @@ function Parser(sourceText) {
         return { type: SHARP };
       case '=':
         return { type: EQUAL };
+      case '+':
+        return { type: PLUS };
+      case '/':
+        return { type: SLASH };
+      case '+=':
+        return { type: PLUS_EQUAL };
+      case '/=':
+        return { type: SLASH_EQUAL };
     }
 
     if (ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z') {

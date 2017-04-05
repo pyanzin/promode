@@ -9,7 +9,7 @@ function Call(expr, params) {
 function Id(name) {
 	return {
 		compile: function() {
-			return 'this.' + name;
+			return 'obj[\'' + name + '\']';
 		}
 	};
 }
@@ -47,9 +47,13 @@ function Assign(left, expr) {
 }
 
 function Func(stmts) {
-	return '(function (value) { ' +
-		stmts.map(x => x.compile()).join(';\n') +
-		'; })';
+	return {
+            compile: function() {
+                return '(function (obj, value) { ' +
+                    stmts.map(x => x.compile()).join(';\n') +
+                    '; })';
+        }
+    };
 }
 
 var ctx = {

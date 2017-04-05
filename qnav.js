@@ -540,9 +540,6 @@ $(function() {
   editor.getSession().setMode("ace/mode/python");
   editor.setOption('tabSize', 2);
   editor.setShowPrintMargin(false);
-  editor.setOptions({
-    enableBasicAutocompletion: true
-});
   //localStorage.script = editor.getValue();
   // this shows all invisibles, but only the spaces are required
   //editor.setOption('showInvisibles', true);
