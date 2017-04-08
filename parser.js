@@ -300,20 +300,14 @@ function Parser(sourceText) {
   function mods() {
     var isBrace = openBrace();
 
-    var newModifiers = [];
-
     if (isBrace) {
-      while (true) {
+      var newModifiers = [];
+      while (!closeBrace()) {
         var newMod = modifier();
-        if (!newMod) {
-          semicolon();
-          closeBrace();
-          return newModifiers;
-        } else {        
-          newModifiers.push(newMod);
-          semicolon();
-        }
+        newModifiers.push(newMod);
+        semicolon();
       }
+      return newModifiers;
     } else {
       return [modifier()];
     }
@@ -336,6 +330,9 @@ function Parser(sourceText) {
   }
 
   function modifier() {
+      var ast = topAst();
+      return eval(ast.compile());
+
     var identifier = id();
 
     switch (identifier) {
@@ -440,25 +437,58 @@ function Parser(sourceText) {
       var pos = getPosition();
 
       var id = idAst();
-      if (id === null || !isEqual()) {
+
+      if (id === null) {
           backtrackTo(pos);
           return sumAst();
       }
 
-      return Assign(id, exprAst());
+      if (isEqual())
+          return Assign(id, sumAst());
+
+      if (isPlusEqual())
+          return Assign(id, Sum(id, sumAst()));
+
+      if (isSlashEqual())
+          return Assign(id, Slash(id, sumAst()));
+
+      backtrackTo(pos);
+      return sumAst();
+
   }
 
   function sumAst() {
       var pos = getPosition();
 
       var left = idAst();
+      
+      if (isPlus())
+          return Sum(left, sumAst());
 
-      if (!isPlus()) {
+      if (isSlash())
+          return Slash(left, sumAst());
+
+      backtrackTo(pos);
+      return callAst();
+  }
+
+  function callAst() {
+      var pos = getPosition();
+
+      var id = idAst();
+
+      if (!openParen()) {
           backtrackTo(pos);
           return idAst();
       }
 
-      return Sum(left, sumAst());
+      var params = [];
+      while (!closeParen()) {
+          params.push(exprAst());
+          comma();
+      }
+
+      return Call(id, params);
   }
 
   function idAst() {
@@ -468,17 +498,28 @@ function Parser(sourceText) {
 
       if (idName === null) {
           backtrackTo(pos);
-          return stringAst();
+          return underscoreAst();
       }
 
       return Id(idName);
+  }
+
+  function underscoreAst() {
+      var pos = getPosition();
+
+      if (!underscore()) {
+          backtrackTo(pos);
+          return stringAst();
+      }
+
+      return Underscore();
   }
 
   function stringAst() {
       var str = string();
 
       if (str === null)
-          wrongToken([ID, STRING]);
+          wrongToken([ID, STRING, UNDERSCORE]);
 
       return Str(str);
   }
@@ -496,7 +537,10 @@ function Parser(sourceText) {
     endOfFile = BoolParser(FILE_END),
     isSharp = BoolParser(SHARP),
     isEqual = BoolParser(EQUAL),
-    isPlus = BoolParser(PLUS);
+    isPlus = BoolParser(PLUS),
+    isSlash = BoolParser(SLASH),
+    isPlusEqual = BoolParser(PLUS_EQUAL),
+    isSlashEqual = BoolParser(SLASH_EQUAL);
 
   function tab() {
     var preTabPosition = getPosition();    
@@ -614,17 +658,6 @@ function Parser(sourceText) {
         }
         return { type: STRING, value: str };
 
-      case '/':
-        if (getNextChar() !== '/') {
-          backtrack(2);
-          wrongSymbol();
-        }
-
-        while (getNextChar() !== '\n')
-          ;
-
-        backtrack(1);
-        return getToken();
       case '\r':
         getNextChar();
       case '\n':
@@ -673,13 +706,22 @@ function Parser(sourceText) {
       case '=':
         return { type: EQUAL };
       case '+':
+        if (getNextChar() === '=')
+          return { type: PLUS_EQUAL };
+        backtrack(1);
         return { type: PLUS };
       case '/':
+        var nextCh = getNextChar();
+        if (nextCh === '=')
+          return { type: SLASH_EQUAL };
+        if (nextCh === '/') {
+          while (getNextChar() !== '\n')
+            ;
+          backtrack(1);
+          return getToken();
+        }
+        backtrack(1);
         return { type: SLASH };
-      case '+=':
-        return { type: PLUS_EQUAL };
-      case '/=':
-        return { type: SLASH_EQUAL };
     }
 
     if (ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z') {

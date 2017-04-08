@@ -49,16 +49,24 @@ function Assign(left, expr) {
 function Func(stmts) {
 	return {
             compile: function() {
-                return '(function (obj, value) { ' +
+                return '(function (obj, _value) { ' +
                     stmts.map(x => x.compile()).join(';\n') +
                     '; })';
         }
     };
 }
 
+function Underscore() {
+    return {
+        compile: function() {
+            return '_value';
+        }
+    };
+}
+
 var ctx = {
 	params: [],
-	param: function(name, value) { return this[name] = value; },
+	param: function(name, value) { return this.params[name] = value; },
 	replace: function(str, from, to) { return str.replace(from, to); }
 };
 

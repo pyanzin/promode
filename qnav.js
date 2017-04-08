@@ -315,10 +315,6 @@ function modifierVarCall(identifier) {
   }
 }
 
-function replaceAll(text, from, to) {
-  var pieces = text.split(from);
-  return pieces.join(to);
-}
 
 // Makes modifier which replaces substring in property
 function replace(prop, from, to) {
@@ -411,7 +407,12 @@ function emptyUrl() {
     newWindow: false,
     passedElements: [],
     possibleElements: [],
-    ribbon: []
+    ribbon: [],
+	param: function(name, value) { return this.params[name] = value; },
+	replace: function(text, from, to) {
+      var pieces = text.split(from);
+      return pieces.join(to);
+    }
   };
 }
 
