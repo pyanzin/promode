@@ -45,8 +45,8 @@
 // Music
 '$music'
   '$groove' -&gt; { #http(); host = 'groovemp3.com' }
-    '$artist' -&gt; path = 'artist/{artist}'
-      freetype -&gt; replace(path, '{artist}', _)
+    '$artist' -&gt; path = 'artist'
+      freetype -&gt; path /= _
   '$vk' -&gt; {host = 'vk.com'; path = 'audio'}
     freetype -&gt; param('q', _)
 

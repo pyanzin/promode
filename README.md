@@ -1,34 +1,33 @@
 # qnav
 
-Navigate the web faster!
+Navigate WWW faster!
 
-Define your shortcuts like this:
+First, define your shortcuts like this:
 
 ``` javascript
 // Google Translate
--> protocol('https')
-
-'$t$ranslate' -> {host('translate.google.com'); anchor('{from}/{to}/{text}')}
+'$t$ranslate' -> {protocol = 'https'; host = 'translate.google.com' }
   or
-    'from $russian' -> replace(anchor, '{from}', 'ru')
-    'from $english' -> replace(anchor, '{from}', 'en')
-    'from $spanish' -> replace(anchor, '{from}', 'es')
-    'from $german' -> replace(anchor, '{from}', 'de')
+    'from $russian' -> anchor = 'ru'
+    'from $english' -> anchor = 'en'
+    'from $spanish' -> anchor = 'es'
+    'from $german' -> anchor = 'de'
+    'from $french' -> anchor = 'fr'
+    '$autodetect' -> anchor = 'auto'
   then
     or
-      'to $russian' -> replace(anchor, '{to}', 'ru')
-      'to $english' -> replace(anchor, '{to}', 'en')
-      'to $spanish' -> replace(anchor, '{to}', 'es')
-      'to $german' -> replace(anchor, '{to}', 'de')
+      'from $russian' -> anchor /= 'ru'
+      'from $english' -> anchor /= 'en'
+      'from $spanish' -> anchor /= 'es'
+      'from $german' -> anchor /= 'de'
+      'from $french' -> anchor /= 'fr'
     then
-      '$ '
-        freetype -> replace(anchor, '{text}', _)
-  '$ '
-    freetype -> {replace(anchor, '{from}', 'en'); replace(anchor, '{to}', 'ru'); replace(anchor, '{text}', _)}
+      freetype -> anchor /= _
+  freetype -> { anchor = 'en'; anchor /= 'ru'; anchor /= _}
 ```
 
 After that, typing
 
-#### treg navigation
+#### tregnavigation
 
-will redirect you to https://translate.google.com/#en/es/navigation.
+will redirect you to https://translate.google.com/#en/ge/navigation.
