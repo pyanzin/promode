@@ -330,99 +330,17 @@ function Parser(sourceText) {
   }
 
   function modifier() {
-      var ast = topAst();
-      return eval(ast.compile());
-
-    var identifier = id();
-
-    switch (identifier) {
-      case 'host':
-        openParen(true);
-        var val = paramValue();
-        if (val === null && underscore(true))
-          val = null;
-        closeParen(true);
-        return set('host', val);
-
-      case 'path':
-        openParen(true);
-        var val = paramValue();
-        if (val === null && underscore(true))
-          val = null;
-        closeParen(true);
-        return set('path', val);
-
-      case 'anchor':
-        openParen(true);
-        var val = paramValue();
-        if (!val && underscore(true))
-          str = null;
-        closeParen(true);
-        return set('anchor', val);
-
-      case 'param':
-        openParen(true);
-        var prop = string(true);
-        comma(true);
-        var value = paramValue();
-        if (!value && underscore(true)) {
-          value = null;
-        };
-        closeParen(true);
-        return add('params', prop, value);
-
-      case 'replace':
-        openParen(true);
-        var prop = id(true);
-        comma(true);
-        var fromVal = paramValue();
-        comma(true);
-        var toVal = paramValue();
-        if (toVal === null && underscore(true))
-          var toVal = null;
-        closeParen(true);
-        return replace(prop, fromVal, toVal);
-
-      case 'set':
-        openParen(true);
-        var identifier = id();
-        comma(true);
-        var val = paramValue();
-        if (val === null && underscore(true))
-          var val = null;
-        closeParen(true);
-        return set(identifier, val);
-
-      case 'concat':
-        openParen(true);
-        var identifier = id();
-        comma(true);
-        var val = paramValue();
-        if (val === null && underscore(true))
-          var val = null;
-        closeParen(true);
-        return concat(identifier, val);
-
-      case 'protocol':
-        openParen(true);
-        var val = paramValue();
-        if (!val && underscore(true))
-          val = null;
-        closeParen(true);
-        return set('protocol', val);
+    if (isSharp()) {
+        var varId = id(true);
+        if(isEqual())
+          return set('#'+varId, mods());
+        else if(openParen(true) && closeParen(true))
+          return modifierVarCall('#'+varId);
     }
 
-    if (!isSharp())
-      return null;
+    var ast = topAst();
+    return eval(ast.compile());
 
-    var varId = id(true);
-    if(isEqual())
-      return set('#'+varId, mods());
-    else if(openParen() && closeParen()) {
-      return modifierVarCall('#'+varId);
-    }
-
-    return null;
   }
 
   function topAst() {

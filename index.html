@@ -4,10 +4,9 @@
     <title>Welcome to the crew!</title>
     <script src="jquery.js"></script>    
     <script src="ace.js" type="text/javascript" charset="utf-8"></script>
-    <script src="qwertype.js"></script>    
-    <script src="qnav.js"></script>
     <script src="complex-expr.js"></script>
     <script src="parser.js"></script>
+    <script src="qnav.js"></script>
     <link href="main.css" rel="stylesheet" />
     <link rel="shortcut icon" href="favicon.ico">
   </head>
@@ -34,83 +33,82 @@
     </div>
     <div id="scriptWrapper" style="display: none">
         <div id="script">
--&gt; protocol('https')
--&gt; #http = protocol('http')
+      
+-&gt; protocol = 'https'
+-&gt; #http = { protocol = 'http' }
 
 '$news'
-  '$yandex' -&gt; host('news.yandex.ru')
-  '$bbc' -&gt; host('bbc.com')
-  '$cnn' -&gt; host('cnn.com')
+  '$yandex' -&gt; host = 'news.yandex.ru'
+  '$bbc' -&gt; host = 'bbc.com'
+  '$cnn' -&gt; host = 'cnn.com'
 
 // Music
 '$music'
-  '$groove' -&gt; { #http(); host('groovemp3.com') }
-    '$artist' -&gt; path('artist/{artist}')
+  '$groove' -&gt; { #http(); host = 'groovemp3.com' }
+    '$artist' -&gt; path = 'artist/{artist}'
       freetype -&gt; replace(path, '{artist}', _)
-  '$vk' -&gt; {host('vk.com'); path('audio')}
+  '$vk' -&gt; {host = 'vk.com'; path = 'audio'}
     freetype -&gt; param('q', _)
 
 // Instagram
-'$instagram' -&gt; host('instagram.com')
-  'by $nickname' -&gt; path('{nickname}')
-    freetype -&gt; replace(path, '{nickname}', _)
-  'by $tag' -&gt; path('explore/tags/{tag}')
-    freetype -&gt; replace(path, '{tag}', _)
+'$instagram' -&gt; host = 'instagram.com'
+  'by $nickname'
+    freetype -&gt; path = _
+  'by $tag' -&gt; path = 'explore/tags'
+    freetype -&gt; path /= _
 
-'$wikipedia' -&gt; {host('{lang}.wikipedia.org'); set(lang, 'en')}
+'$wikipedia' -&gt; {host = '{lang}.wikipedia.org'; lang = 'en'}
   and
     '$language'
-      '$russian' -&gt; set(lang, 'ru')
-      '$english' -&gt; set(lang, 'en')
+      '$russian' -&gt; lang = 'ru'
+      '$english' -&gt; lang = 'en'
     '$term'
-      -&gt; path('wiki/{term}')
-      freetype(';') -&gt; set(term, _)
+      -&gt; path = 'wiki'
+      freetype(';') -&gt; path /= replace(_, ' ', '_')
     '$search'
-      freetype(';') -&gt; {path('w/index.php'); param('search', _)}
+      freetype(';') -&gt; {path = 'w/index.php'; param('search', _)}
   then
     'params'
-      -&gt; replace(host, '{lang}', lang)
-      -&gt; replace(term, ' ', '_')
-      -&gt; replace(path, '{term}', term) 
+      -&gt; host = replace(host, '{lang}', lang)
 
 '$search'
   '$images'
-    'on $google' -&gt; {host('google.com'); param('tbm', 'isch'); param('sa', 'X')}
-      freetype -&gt; {path('search'); param('q', _)}
-  'on $google' -&gt; host('google.com')
-    freetype -&gt; {path('search'); param('q', _)}
-  'on $yandex' -&gt; host('yandex.ru')
-    freetype -&gt; {path('search'); }
-  'on $duckduckgo' -&gt; host('duckduckgo.com')
+    'on $google' -&gt; {host = 'google.com'; param('tbm', 'isch'); param('sa', 'X')}
+      freetype -&gt; {path = 'search'; param('q', _)}
+  'on $google' -&gt; host = 'google.com'
+    freetype -&gt; {path = 'search'; param('q', _)}
+  'on $yandex' -&gt; host = 'yandex.ru'
+    freetype -&gt; { path = 'search'; }
+  'on $duckduckgo' -&gt; host = 'duckduckgo.com'
     freetype -&gt; param('q', _)
-  'on $stack$overflow' -&gt; { #http(); host('stackoverflow.com') }
-    freetype -&gt; {path('search'); param('q', _)}
+  'on stack$overflow' -&gt; { #http(); host = 'stackoverflow.com' }
+    freetype -&gt; {path = 'search'; param('q', _)}
 
 // Google Translate
 // trgegenau
-'$t$ranslate' -&gt; {host('translate.google.com'); anchor('{from}/{to}/{text}')}
+'$t$ranslate' -&gt; host = 'translate.google.com'
   or
-    'from $russian' -&gt; replace(anchor, '{from}', 'ru')
-    'from $english' -&gt; replace(anchor, '{from}', 'en')
-    'from $spanish' -&gt; replace(anchor, '{from}', 'es')
-    'from $german' -&gt; replace(anchor, '{from}', 'de')
-    'from $french' -&gt; replace(anchor, '{from}', 'fr')
-    '$autodetect' -&gt; replace(anchor, '{from}', 'auto')
+    'from $russian' -&gt; anchor = 'ru'
+    'from $english' -&gt; anchor = 'en'
+    'from $spanish' -&gt; anchor = 'es'
+    'from $german' -&gt; anchor = 'de'
+    'from $french' -&gt; anchor = 'fr'
+    '$autodetect' -&gt; anchor = 'auto'
   then
     or
-      'to $russian' -&gt; replace(anchor, '{to}', 'ru')
-      'to $english' -&gt; replace(anchor, '{to}', 'en')
-      'to $spanish' -&gt; replace(anchor, '{to}', 'es')
-      'to $german' -&gt; replace(anchor, '{to}', 'de')
-      'to $french' -&gt; replace(anchor, '{to}', 'fr')
+      'from $russian' -&gt; anchor /= 'ru'
+      'from $english' -&gt; anchor /= 'en'
+      'from $spanish' -&gt; anchor /= 'es'
+      'from $german' -&gt; anchor /= 'de'
+      'from $french' -&gt; anchor /= 'fr'
     then
-      freetype -&gt; replace(anchor, '{text}', _)
-  freetype -&gt; {replace(anchor, '{from}', 'en'); replace(anchor, '{to}', 'ru'); replace(anchor, '{text}', _)}
+      freetype -&gt; anchor /= _
+  freetype -&gt; { anchor = 'en'; anchor /= 'ru'; anchor /= _}
 
-'$o$xford dictionary' -&gt; { host('en.oxforddictionaries.com'); path('definition/{word}') }
-  freetype -&gt; replace(path, '{word}', _)
+'$o$xford dictionary' -&gt; { host = 'en.oxforddictionaries.com'; path = 'definition' }
+  freetype -&gt; path /= _
 
-freetype -&gt; {host('google.com'); path('search'); param('q', _)}
+freetype -&gt; {host = 'google.com'; path = 'search'; param('q', _)}
       </div>
       </div>
     </div>

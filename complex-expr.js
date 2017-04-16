@@ -64,13 +64,3 @@ function Underscore() {
     };
 }
 
-var ctx = {
-	params: [],
-	param: function(name, value) { return this.params[name] = value; },
-	replace: function(str, from, to) { return str.replace(from, to); }
-};
-
-var funcText = Func([
-	Assign(Id('x'), Sum(Str('a'), Sum(Str('b'), Str('c')))), 
-	Assign(Id('x'), Call(Id('replace'), [Id('x'), Str('a'), Str('e')]))
-]);
