@@ -1,18 +1,19 @@
 <!doctype html>
 <html>
-  <head>
-    <title>Welcome to the crew!</title>
-    <script src="jquery.js"></script>    
-    <script src="ace.js" type="text/javascript" charset="utf-8"></script>
-    <script src="complex-expr.js"></script>
-    <script src="parser.js"></script>
-    <script src="qnav.js"></script>
-    <link href="main.css" rel="stylesheet" />
-    <link rel="shortcut icon" href="favicon.ico">
-  </head>
-  <body>
+<head>
+  <title>Welcome to the crew!</title>
+  <script src="jquery.js"></script>
+  <script src="ace.js" type="text/javascript" charset="utf-8"></script>
+  <script src="complex-expr.js"></script>
+  <script src="parser.js"></script>
+  <script src="qnav.js"></script>
+  <link href="main.css" rel="stylesheet" />
+  <link rel="shortcut icon" href="favicon.ico">
+</head>
+<body>
   <div id="wrapper">
-    <div id="header"><h1>&#9875; Quick Navigation Club</h1>
+    <div id="header">
+      <h1>&#9875; Quick Navigation Club</h1>
       <input id="editScriptBtn" class="btn" type="button" value="Edit Script" onclick="onEditScript()" />
       <div id="scriptEditButtons">
         <input id="cancelBtn" class="btn" type="button" value="Cancel" onclick="onCancel()" />
@@ -20,18 +21,18 @@
       </div>
     </div>
     <div id="content">
-    <div id="treeWrapper">
-      <div id="qnav-url"></div>
-      <div>
+      <div id="treeWrapper">
+        <div id="qnav-url"></div>
+        <div>
           <div id="passedElements"></div>
           <div id="possibleElements"></div>
+        </div>
+        <div>
+          <input id="qnav-input" type="text" autocomplete="off" oninput="ontype(this.value)" />
+          <div id="ribbon"></div>
+        </div>
       </div>
-      <div>
-        <input id="qnav-input" type="text" autocomplete="off" oninput="ontype(this.value)" />
-        <div id="ribbon"></div>
-      </div>
-    </div>
-    <div id="scriptWrapper" style="display: none">
+      <div id="scriptWrapper" style="display: none">
         <div id="script">
       
 -&gt; protocol = 'https'
@@ -47,7 +48,7 @@
   '$groove' -&gt; { #http(); host = 'groovemp3.com' }
     '$artist' -&gt; path = 'artist'
       freetype -&gt; path /= _
-  '$vk' -&gt; {host = 'vk.com'; path = 'audio'}
+  '$vk' -&gt; { host = 'vk.com'; path = 'audio' }
     freetype -&gt; param('q', _)
 
 // Instagram
@@ -57,7 +58,7 @@
   'by $tag' -&gt; path = 'explore/tags'
     freetype -&gt; path /= _
 
-'$wikipedia' -&gt; {host = '{lang}.wikipedia.org'; lang = 'en'}
+'$wikipedia' -&gt; { host = '{lang}.wikipedia.org'; lang = 'en' }
   and
     '$language'
       '$russian' -&gt; lang = 'ru'
@@ -66,27 +67,27 @@
       -&gt; path = 'wiki'
       freetype(';') -&gt; path /= replace(_, ' ', '_')
     '$search'
-      freetype(';') -&gt; {path = 'w/index.php'; param('search', _)}
+      freetype(';') -&gt; { path = 'w/index.php'; param('search', _) }
   then
     'params'
       -&gt; host = replace(host, '{lang}', lang)
 
 '$search'
   '$images'
-    'on $google' -&gt; {host = 'google.com'; param('tbm', 'isch'); param('sa', 'X')}
-      freetype -&gt; {path = 'search'; param('q', _)}
+    'on $google' -&gt; { host = 'google.com'; param('tbm', 'isch'); param('sa', 'X') }
+      freetype -&gt; { path = 'search'; param('q', _) }
   'on $google' -&gt; host = 'google.com'
-    freetype -&gt; {path = 'search'; param('q', _)}
+    freetype -&gt; { path = 'search'; param('q', _) }
   'on $yandex' -&gt; host = 'yandex.ru'
     freetype -&gt; { path = 'search'; }
   'on $duckduckgo' -&gt; host = 'duckduckgo.com'
     freetype -&gt; param('q', _)
   'on stack$overflow' -&gt; { #http(); host = 'stackoverflow.com' }
-    freetype -&gt; {path = 'search'; param('q', _)}
+    freetype -&gt; { path = 'search'; param('q', _) }
 
 // Google Translate
 // trgegenau
-'$t$ranslate' -&gt; host = 'translate.google.com'
+'$translate' -&gt; host = 'translate.google.com'
   or
     'from $russian' -&gt; anchor = 'ru'
     'from $english' -&gt; anchor = 'en'
@@ -105,19 +106,20 @@
       freetype -&gt; anchor /= _
   freetype -&gt; { anchor = 'en'; anchor /= 'ru'; anchor /= _}
 
-'$o$xford dictionary' -&gt; { host = 'en.oxforddictionaries.com'; path = 'definition' }
+'o$xford dictionary' -&gt; { host = 'en.oxforddictionaries.com'; path = 'definition' }
   freetype -&gt; path /= _
 
-freetype -&gt; {host = 'google.com'; path = 'search'; param('q', _)}
-      </div>
+'google' -> { host = 'google.com'; path = 'search' }
+  freetype -&gt; param('q', _)
+        </div>
       </div>
     </div>
-  <div id="footer">
-    <span>About</span>
-    <span>GitHub</span>
-    <span>Language Reference</span>
-  </div>
+    <div id="footer">
+      <span>About</span>
+      <span>GitHub</span>
+      <span>Language Reference</span>
+    </div>
   </div>
 
-  </body>
+</body>
 </html>

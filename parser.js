@@ -313,22 +313,6 @@ function Parser(sourceText) {
     }
   }
 
-  function paramValue() {
-    var preValPosition = getPosition();
-    var str = string();
-
-    if (str !== null)
-      return str;
-
-    var identifier = id();
-
-    if (identifier !== null)
-      return function (obj) { return obj[identifier]; }
-
-    backtrackTo(preValPosition);
-    return null;
-  }
-
   function modifier() {
     if (isSharp()) {
       var varId = id(true);
@@ -471,6 +455,9 @@ function Parser(sourceText) {
     }
   }
 
+  // Parser which returns if the next token is of the type passed
+  // Doesn't advances if the next token is not if this type
+  // Throws an error if isRequired is specified
   function BoolParser(type) {
     return function (isRequired) {
       var startPosition = getPosition();
@@ -487,6 +474,7 @@ function Parser(sourceText) {
     }
   }
 
+  // The same as BoolParser but returns the value token represents or null if it doesn't match
   function ValueParser(type) {
     return function (isRequired) {
       var startPosition = getPosition();
@@ -507,10 +495,12 @@ function Parser(sourceText) {
     return parserState.source[parserState.position++];
   }
 
+  // Returns the state by n symbols back
   function backtrack(n) {
     parserState.position = parserState.position - n;
   }
 
+  // Sets the state to n position
   function backtrackTo(n) {
     parserState.position = n;
   }
@@ -556,6 +546,7 @@ function Parser(sourceText) {
     return { row: row, col: col };
   }
 
+  // Returns the next token recognized
   function getToken() {
     var ch;
     do {

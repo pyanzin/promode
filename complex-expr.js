@@ -1,7 +1,7 @@
 function Call(expr, params) {
   return {
     compile: function () {
-      return expr.compile() + '(' + params.map(x => x.compile()).join(', ') + ')';
+      return expr.compile() + '(' + params.map(function (x) { return x.compile(); }).join(', ') + ')';
     }
   };
 }
@@ -50,8 +50,7 @@ function Func(stmts) {
   return {
     compile: function () {
       return '(function (obj, _value) { ' +
-        stmts.map(x => x.compile()).join(';\n') +
-        '; })';
+        stmts.map(function (x) { return x.compile(); }).join(';\n') + '; })';
     }
   };
 }

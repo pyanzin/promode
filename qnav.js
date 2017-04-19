@@ -316,64 +316,6 @@ function modifierVarCall(identifier) {
   }
 }
 
-
-// Makes modifier which replaces substring in property
-function replace(prop, from, to) {
-  if (to === null)
-    return function (obj, to) {
-      obj[prop] = obj[prop].replace(from, to);
-    };
-  else
-    return function (obj) {
-      if (typeof (from) === 'function')
-        var fromStr = from(obj);
-      else
-        var fromStr = from;
-      if (typeof (to) === 'function')
-        var toStr = to(obj);
-      else
-        var toStr = to;
-      if (typeof (obj[prop]) !== 'string')
-        return;
-      obj[prop] = replaceAll(obj[prop], fromStr, toStr);
-    }
-}
-
-// Makes modifier to add new element to the property of array type
-function add(prop, key, value) {
-  if (value === null)
-    return function (obj, value) {
-      obj[prop] = obj[prop] || {};
-      obj[prop][key] = value;
-    };
-  else
-    return function (obj) {
-      var valueStr;
-      if (typeof (value) === 'function')
-        valueStr = value(obj);
-      else
-        valueStr = value;
-      obj[prop] = obj[prop] || {};
-      obj[prop][key] = valueStr;
-    }
-}
-
-function concat(prop, value) {
-  if (value === null)
-    return function (obj, value) {
-      obj[prop] = obj[prop] + value;
-    };
-  else
-    return function (obj) {
-      var valueStr;
-      if (typeof (value) === 'function')
-        valueStr = value(obj);
-      else
-        valueStr = value;
-      obj[prop] = obj[prop] + valueStr;
-    }
-}
-
 function parsed(count, color) {
   return function (obj) {
     obj.ribbon.push({

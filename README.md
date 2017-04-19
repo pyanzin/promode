@@ -6,7 +6,7 @@ First, define your shortcuts like this:
 
 ``` javascript
 // Google Translate
-'$t$ranslate' -> {protocol = 'https'; host = 'translate.google.com' }
+'$t$ranslate' -> { protocol = 'https'; host = 'translate.google.com' }
   or
     'from $russian' -> anchor = 'ru'
     'from $english' -> anchor = 'en'
@@ -23,7 +23,7 @@ First, define your shortcuts like this:
       'from $french' -> anchor /= 'fr'
     then
       freetype -> anchor /= _
-  freetype -> { anchor = 'en'; anchor /= 'ru'; anchor /= _}
+  freetype -> { anchor = 'en'; anchor /= 'ru'; anchor /= _ }
 ```
 
 After that, typing
