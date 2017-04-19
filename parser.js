@@ -26,41 +26,41 @@ function Parser(sourceText) {
   function tokenToString(n) {
     switch (n) {
       case STRING:
-        return "STRING";
+        return 'STRING';
       case ARROW:
-        return "ARROW";
+        return 'ARROW';
       case OPEN_PAREN:
-        return "OPEN_PAREN";
+        return 'OPEN_PAREN';
       case CLOSE_PAREN:
-        return "CLOSE_PAREN";
+        return 'CLOSE_PAREN';
       case OPEN_BRACE:
-        return "OPEN_BRACE";
+        return 'OPEN_BRACE';
       case CLOSE_BRACE:
-        return "CLOSE_BRACE";
+        return 'CLOSE_BRACE';
       case ID:
-        return "ID";
+        return 'ID';
       case TAB:
-        return "TAB";
+        return 'TAB';
       case UNDERSCORE:
-        return "UNDERSCORE";
+        return 'UNDERSCORE';
       case SEMICOLON:
-        return "SEMICOLON";
+        return 'SEMICOLON';
       case COMMA:
-        return "COMMA";
+        return 'COMMA';
       case FILE_END:
-        return "FILE_END";
+        return 'FILE_END';
       case SHARP:
-        return "SHARP";
+        return 'SHARP';
       case EQUAL:
-        return "EQUAL";
+        return 'EQUAL';
       case PLUS:
-        return "PLUS";
+        return 'PLUS';
       case SLASH:
-        return "SLASH";
+        return 'SLASH';
       case PLUS_EQUAL:
-        return "PLUS_EQUAL";
+        return 'PLUS_EQUAL';
       case SLASH_EQUAL:
-        return "SLASH_EQUAL";
+        return 'SLASH_EQUAL';
       default:
         return null;
     }
@@ -70,8 +70,8 @@ function Parser(sourceText) {
     return standard(true);
   }
 
-  function parseNode() {  
-    var startPosition = getPosition();  
+  function parseNode() {
+    var startPosition = getPosition();
     var currentTab = tab();
 
     var str = string();
@@ -87,18 +87,18 @@ function Parser(sourceText) {
       backtrackTo(startPosition);
       return parseFreeTypeNode();
     } else if (identifier === 'or') {
-      backtrackTo(startPosition);    
+      backtrackTo(startPosition);
       return parseOrNode();
     } else if (identifier === 'and') {
-      backtrackTo(startPosition);    
+      backtrackTo(startPosition);
       return parseAndNode();
     }
-    
+
     if (identifier !== null)
       error('Expected \'freetype\', \'or\' or \'and\' block, but found: \'' +
         identifier + '\'');
-    
-    if (identifier === null && endOfFile()) 
+
+    if (identifier === null && endOfFile())
       return null;
 
     wrongToken([ID, STRING, FILE_END]);
@@ -108,7 +108,7 @@ function Parser(sourceText) {
     var currentTab, shortcut;
     if (isTop) {
       currentTab = -2;
-      shortcut = "";
+      shortcut = '';
     } else {
       currentTab = tab();
       shortcut = string();
@@ -123,7 +123,7 @@ function Parser(sourceText) {
 
     var preTabPosition = getPosition();
     var nextTab = tab();
-    
+
     while (arrow()) {
       modifiers = modifiers.concat(mods());
       preTabPosition = getPosition();
@@ -174,7 +174,7 @@ function Parser(sourceText) {
 
     var preTabPosition = getPosition();
     var nextTab = tab();
-    
+
     while (arrow()) {
       modifiers = modifiers.concat(mods());
       preTabPosition = getPosition();
@@ -234,7 +234,7 @@ function Parser(sourceText) {
       backtrackTo(preThenPosition);
       return orNode(orChild, thenChild);
     }
-    
+
     preTabPosition = getPosition();
     nextTab = tab();
     backtrackTo(preTabPosition);
@@ -323,19 +323,19 @@ function Parser(sourceText) {
     var identifier = id();
 
     if (identifier !== null)
-      return function(obj) { return obj[identifier]; }
-    
+      return function (obj) { return obj[identifier]; }
+
     backtrackTo(preValPosition);
     return null;
   }
 
   function modifier() {
     if (isSharp()) {
-        var varId = id(true);
-        if(isEqual())
-          return set('#'+varId, mods());
-        else if(openParen(true) && closeParen(true))
-          return modifierVarCall('#'+varId);
+      var varId = id(true);
+      if (isEqual())
+        return set('#' + varId, mods());
+      else if (openParen(true) && closeParen(true))
+        return modifierVarCall('#' + varId);
     }
 
     var ast = topAst();
@@ -344,102 +344,102 @@ function Parser(sourceText) {
   }
 
   function topAst() {
-      return Func([exprAst()]);
+    return Func([exprAst()]);
   }
-  
+
   function exprAst() {
-      return assignAst();
+    return assignAst();
   }
 
   function assignAst() {
-      var pos = getPosition();
+    var pos = getPosition();
 
-      var id = idAst();
+    var id = idAst();
 
-      if (id === null) {
-          backtrackTo(pos);
-          return sumAst();
-      }
-
-      if (isEqual())
-          return Assign(id, sumAst());
-
-      if (isPlusEqual())
-          return Assign(id, Sum(id, sumAst()));
-
-      if (isSlashEqual())
-          return Assign(id, Slash(id, sumAst()));
-
+    if (id === null) {
       backtrackTo(pos);
       return sumAst();
+    }
+
+    if (isEqual())
+      return Assign(id, sumAst());
+
+    if (isPlusEqual())
+      return Assign(id, Sum(id, sumAst()));
+
+    if (isSlashEqual())
+      return Assign(id, Slash(id, sumAst()));
+
+    backtrackTo(pos);
+    return sumAst();
 
   }
 
   function sumAst() {
-      var pos = getPosition();
+    var pos = getPosition();
 
-      var left = idAst();
-      
-      if (isPlus())
-          return Sum(left, sumAst());
+    var left = idAst();
 
-      if (isSlash())
-          return Slash(left, sumAst());
+    if (isPlus())
+      return Sum(left, sumAst());
 
-      backtrackTo(pos);
-      return callAst();
+    if (isSlash())
+      return Slash(left, sumAst());
+
+    backtrackTo(pos);
+    return callAst();
   }
 
   function callAst() {
-      var pos = getPosition();
+    var pos = getPosition();
 
-      var id = idAst();
+    var id = idAst();
 
-      if (!openParen()) {
-          backtrackTo(pos);
-          return idAst();
-      }
+    if (!openParen()) {
+      backtrackTo(pos);
+      return idAst();
+    }
 
-      var params = [];
-      while (!closeParen()) {
-          params.push(exprAst());
-          comma();
-      }
+    var params = [];
+    while (!closeParen()) {
+      params.push(exprAst());
+      comma();
+    }
 
-      return Call(id, params);
+    return Call(id, params);
   }
 
   function idAst() {
-      var pos = getPosition();
+    var pos = getPosition();
 
-      var idName = id();
+    var idName = id();
 
-      if (idName === null) {
-          backtrackTo(pos);
-          return underscoreAst();
-      }
+    if (idName === null) {
+      backtrackTo(pos);
+      return underscoreAst();
+    }
 
-      return Id(idName);
+    return Id(idName);
   }
 
   function underscoreAst() {
-      var pos = getPosition();
+    var pos = getPosition();
 
-      if (!underscore()) {
-          backtrackTo(pos);
-          return stringAst();
-      }
+    if (!underscore()) {
+      backtrackTo(pos);
+      return stringAst();
+    }
 
-      return Underscore();
+    return Underscore();
   }
 
   function stringAst() {
-      var str = string();
+    var str = string();
 
-      if (str === null)
-          wrongToken([ID, STRING, UNDERSCORE]);
+    if (str === null)
+      wrongToken([ID, STRING, UNDERSCORE]);
 
-      return Str(str);
+    return Str(str);
   }
 
   var comma = BoolParser(COMMA),
@@ -461,7 +461,7 @@ function Parser(sourceText) {
     isSlashEqual = BoolParser(SLASH_EQUAL);
 
   function tab() {
-    var preTabPosition = getPosition();    
+    var preTabPosition = getPosition();
     var token = getToken();
     if (token.type === TAB)
       return token.value;
@@ -472,7 +472,7 @@ function Parser(sourceText) {
   }
 
   function BoolParser(type) {
-    return function(isRequired) {
+    return function (isRequired) {
       var startPosition = getPosition();
       var token = getToken();
 
@@ -488,7 +488,7 @@ function Parser(sourceText) {
   }
 
   function ValueParser(type) {
-    return function(isRequired) {
+    return function (isRequired) {
       var startPosition = getPosition();
       var token = getToken();
 
@@ -518,7 +518,7 @@ function Parser(sourceText) {
   function getPosition() {
     return parserState.position;
   }
-  
+
   function error(text) {
     var colRow = getColRow(parserState.source, getPosition());
     var ex = {
@@ -533,8 +533,8 @@ function Parser(sourceText) {
 
   function wrongToken(expected) {
     var found = getToken().type;
-    error("Expected: " + expected.map(tokenToString).join(', ') 
-      + "; but found: " + tokenToString(found));
+    error('Expected: ' + expected.map(tokenToString).join(', ')
+      + '; but found: ' + tokenToString(found));
   }
 
   function wrongSymbol() {
@@ -590,10 +590,10 @@ function Parser(sourceText) {
 
         backtrack(1);
         if (ch === '/' || ch === '\n' || ch === '\r')
-            return getToken();
+          return getToken();
 
         if (tabCount % 2 !== 0)
-            error("Uneven count of tabs");
+          error('Uneven count of tabs');
 
         return { type: TAB, value: tabCount };
       case '-':
@@ -618,7 +618,7 @@ function Parser(sourceText) {
       case ';':
         return { type: SEMICOLON };
       case ',':
-        return { type: COMMA };    
+        return { type: COMMA };
       case '#':
         return { type: SHARP };
       case '=':
@@ -665,7 +665,7 @@ function Parser(sourceText) {
       success: true,
       tree: parseTop()
     };
-  } catch(ex) {
+  } catch (ex) {
     return {
       success: false,
       error: ex
