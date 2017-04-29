@@ -42,7 +42,7 @@ function node(shortcut) {
       this.modifiers.push(newModifier);
       return this;
     },
-    traverse: function (pattern, position, depth) {
+    traverse: function (pattern, position, history) {
       var that = this;
 
       var isMatch = that.match(pattern, position);
@@ -58,7 +58,7 @@ function node(shortcut) {
       if (pattern.length <= that.prefix.length + position) {
         var possibleResults = parseResult();
         for (var i = 0; i < that.children.length; ++i) {
-          var childResult = that.children[i].asPossible(depth + (shortcut.length > 0 ? 1 : 0));
+          var childResult = that.children[i].asPossible(history);
           if (childResult !== null)
             possibleResults = merge(possibleResults, childResult);
         }
@@ -72,19 +72,19 @@ function node(shortcut) {
       }
 
       for (var i = 0; i < that.children.length; ++i) {
-        var result = that.children[i].traverse(pattern, position + that.prefix.length, depth + (shortcut.length > 0 ? 1 : 0));
+        var result = that.children[i].traverse(pattern, position + that.prefix.length, history);
         if (result !== null)
           return merge(
             parseResult(that.prefix.length, that.modifiers.concat(pattern.length > 0 ?
-              [addPassed(that.passedElem, depth), parsed(prefix.length, toMainColor(prefix))] : [])),
+              [addPassed(that.passedElem, history), parsed(prefix.length, toMainColor(prefix))] : [])),
             result
           );
       };
 
       return null;
     },
-    asPossible: function (depth) {
-      return parseResult(0, [addPossible(this.possibleElem, depth)]);
+    asPossible: function (history) {
+      return parseResult(0, [addPossible(this.possibleElem, history)]);
     }
   };
 }
@@ -108,28 +108,28 @@ function merge(result1, result2) {
 // Combinator node. Calls orBody node and if it returns result goes to thenBody.
 function orNode(orBody, thenBody) {
   return {
-    traverse: function (pattern, position, depth) {
+    traverse: function (pattern, position, history) {
       var that = this;
 
       if (pattern.length <= position)
-        return that.asPossible(depth);
+        return that.asPossible(history);
 
-      var orResult = orBody.traverse(pattern, position, depth);
+      var orResult = orBody.traverse(pattern, position, history);
       if (orResult === null)
         return null;
 
       if (pattern.length <= position + orResult.parsed)
-        return merge(orResult, thenBody.asPossible(depth));
+        return merge(orResult, thenBody.asPossible(history));
 
-      var thenResult = thenBody.traverse(pattern, position + orResult.parsed, depth + 1);
+      var thenResult = thenBody.traverse(pattern, position + orResult.parsed, history);
 
       if (thenResult === null)
         return null;
 
       return merge(orResult, thenResult);
     },
-    asPossible: function (depth) {
-      return orBody.asPossible(depth);
+    asPossible: function (history) {
+      return orBody.asPossible(history);
     }
   };
 }
@@ -137,34 +137,34 @@ function orNode(orBody, thenBody) {
 // Combinator node. Calls andBody node while it returns result or moves towards the pattern and then goes to thenBody
 function andNode(andBody, thenBody) {
   return {
-    traverse: function (pattern, position, depth) {
+    traverse: function (pattern, position, history) {
       var that = this;
       var andResult = parseResult();
       while (true) {
-        result = andBody.traverse(pattern, position + andResult.parsed, depth);
+        result = andBody.traverse(pattern, position + andResult.parsed, history);
         if (result !== null && result.parsed > 0)
           andResult = merge(andResult, result);
         else
           break;
       };
 
-      var thenResult = thenBody.traverse(pattern, position + andResult.parsed, depth + 1);
+      var thenResult = thenBody.traverse(pattern, position + andResult.parsed, history);
 
       if (thenResult === null)
-        return merge(andResult, that.asPossible(depth));
+        return merge(andResult, that.asPossible(history));
 
       return merge(andResult, thenResult);
     },
-    asPossible: function (depth) {
+    asPossible: function (history) {
       return merge(
-        andBody.asPossible(depth),
-        thenBody.asPossible(depth));
+        andBody.asPossible(history),
+        thenBody.asPossible(history));
     }
   };
 }
 
 // makes freetype node which captures all the input from position to the end of string
-function freetype(terminator) {
+function freetype(terminator, historyNamespace) {
   return {
     children: [],
     modifiers: [],
@@ -184,7 +184,7 @@ function freetype(terminator) {
       this.modifiers.push(newModifier);
       return this;
     },
-    traverse: function (pattern, position, depth) {
+    traverse: function (pattern, position, history) {
       var that = this;
       var matchText = this.match(pattern, position);
 
@@ -202,7 +202,7 @@ function freetype(terminator) {
       var freetypeElement = $('<span style="background-color: ' +
         color + '" class="node-passed">' + matchText + terminatorPiece + '</span>');
 
-      var mods = mods.concat([addPassed(freetypeElement, depth), parsed(matchText.length, color)]);
+      var mods = mods.concat([addPassed(freetypeElement, history), parsed(matchText.length, color)]);
 
       var termLength = terminator ? terminator.length : 0;
 
@@ -213,18 +213,18 @@ function freetype(terminator) {
         var possibleResults = parseResult();
         for (var i = 0; i < that.children.length; ++i) {
           possibleResults = merge(possibleResults,
-            that.children[i].traverse(pattern, position + matchText.length + termLength, depth + 1));
+            that.children[i].traverse(pattern, position + matchText.length + termLength, history));
         }
 
         return merge(
-          parseResult(matchText.length + termLength, mods.concat([addPassed(freetypeElement, depth)])),
+          parseResult(matchText.length + termLength, mods.concat([addPassed(freetypeElement, history)])),
           possibleResults
         );
       }
 
       for (var i = 0; i < that.children.length; ++i) {
         var result = that.children[i].traverse(pattern, position + matchText.length + termLength,
-          depth + 1);
+          history);
         if (result !== null)
           return merge(
             parseResult(matchText.length + termLength, mods),
@@ -232,7 +232,7 @@ function freetype(terminator) {
           );
       };
     },
-    asPossible: function (depth) {
+    asPossible: function (history) {
       var terminatorPiece = terminator
         ? '<span class="key">' + terminator + '</span>'
         : '';
@@ -257,23 +257,23 @@ function aggregatorNode() {
       this.modifiers.push(newModifier);
       return this;
     },
-    traverse: function (pattern, position, depth) {
+    traverse: function (pattern, position, history) {
       var that = this;
 
       for (var i = 0; i < that.children.length; ++i) {
-        var childResult = that.children[i].traverse(pattern, position, depth);
+        var childResult = that.children[i].traverse(pattern, position, history);
         if (childResult !== null)
           return merge(parseResult(0, that.modifiers), childResult);
       };
 
       return null;
     },
-    asPossible: function (depth) {
+    asPossible: function (history) {
       var result = parseResult();
       for (var i = 0; i < this.children.length; ++i) {
         result = merge(
           result,
-          this.children[i].asPossible(depth)
+          this.children[i].asPossible(history)
         );
       };
       return result;

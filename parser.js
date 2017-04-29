@@ -21,7 +21,8 @@ function Parser(sourceText) {
     PLUS = 14,
     SLASH = 15,
     PLUS_EQUAL = 16,
-    SLASH_EQUAL = 17;
+    SLASH_EQUAL = 17,
+    COLON = 18;
 
   function tokenToString(n) {
     switch (n) {
@@ -61,6 +62,8 @@ function Parser(sourceText) {
         return 'PLUS_EQUAL';
       case SLASH_EQUAL:
         return 'SLASH_EQUAL';
+      case COLON:
+        return 'COLON';
       default:
         return null;
     }
@@ -159,6 +162,10 @@ function Parser(sourceText) {
     if (identifier !== 'freetype')
       return null;
 
+    var historyNamespace;
+    if (isColon())
+        historyNamespace = id(true);
+
     var terminator = null;
     if (openParen()) {
       terminator = string(true);
@@ -183,7 +190,7 @@ function Parser(sourceText) {
 
     backtrackTo(preTabPosition);
 
-    var newNode = freetype(terminator);
+    var newNode = freetype(terminator, historyNamespace);
 
     for (var i = 0; i < modifiers.length; i++) {
       newNode.modifier(modifiers[i]);
@@ -442,7 +449,8 @@ function Parser(sourceText) {
     isPlus = BoolParser(PLUS),
     isSlash = BoolParser(SLASH),
     isPlusEqual = BoolParser(PLUS_EQUAL),
-    isSlashEqual = BoolParser(SLASH_EQUAL);
+    isSlashEqual = BoolParser(SLASH_EQUAL),
+    isColon = BoolParser(COLON);
 
   function tab() {
     var preTabPosition = getPosition();
@@ -614,6 +622,8 @@ function Parser(sourceText) {
         return { type: SHARP };
       case '=':
         return { type: EQUAL };
+      case ':':
+        return { type: COLON };
       case '+':
         if (getNextChar() === '=')
           return { type: PLUS_EQUAL };
