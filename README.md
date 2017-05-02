@@ -7,7 +7,7 @@ These keys are defined by the script written in some language.
 
 In many cases, Qnav allows to replace the sequence of actions like [mouse click]-[typing]-[mouse click]-[typing]-... by typing only one line.
 
-The demo site is worth a thousand words: http://qnav.club
+The demo site is worth a thousand words: https://pyanzin.github.io/qnav/
 
 The example of script:
 
