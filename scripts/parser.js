@@ -369,7 +369,7 @@ function Parser(sourceText) {
   function sumAst() {
     var pos = getPosition();
 
-    var left = idAst();
+    var left = callAst();
 
     if (isPlus())
       return Sum(left, sumAst());
