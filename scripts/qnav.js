@@ -352,6 +352,7 @@ function emptyUrl() {
     possibleElements: [],
     ribbon: [],
     param: function (name, value) { return this.params[name] = value; },
+    unparam: function (name) { delete this.params[name]; },
     replace: function (text, from, to) {
       var pieces = text.split(from);
       return pieces.join(to);
