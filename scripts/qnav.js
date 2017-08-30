@@ -49,10 +49,15 @@ function node(shortcut) {
       if (!isMatch)
         return null;
 
+      var mods = that.modifiers.map(
+        function (m) {
+          return function (result) { m(result, shortcut.split('$').join('')); };
+      });
+
       if (that.children.length === 0)
         return parseResult(
           that.prefix.length,
-          that.modifiers.concat([addPassed(that.passedElem), parsed(prefix.length, toMainColor(prefix))])
+          mods.concat([addPassed(that.passedElem), parsed(prefix.length, toMainColor(prefix))])
         );
 
       if (pattern.length <= that.prefix.length + position) {
@@ -65,7 +70,7 @@ function node(shortcut) {
 
         var currentResult = parseResult(
           that.prefix.length,
-          that.modifiers.concat(pattern.length > 0 ? [addPassed(that.passedElem), parsed(prefix.length, toMainColor(prefix))] : [])
+          mods.concat(pattern.length > 0 ? [addPassed(that.passedElem), parsed(prefix.length, toMainColor(prefix))] : [])
         );
 
         return merge(currentResult, possibleResults);
@@ -75,7 +80,7 @@ function node(shortcut) {
         var result = that.children[i].traverse(pattern, position + that.prefix.length, history);
         if (result !== null)
           return merge(
-            parseResult(that.prefix.length, that.modifiers.concat(pattern.length > 0 ?
+            parseResult(that.prefix.length, mods.concat(pattern.length > 0 ?
               [addPassed(that.passedElem, history), parsed(prefix.length, toMainColor(prefix))] : [])),
             result
           );
@@ -281,7 +286,7 @@ function aggregatorNode() {
   };
 }
 
-// Makes modifier which sets the value for property. If value is not here, it should be passed on calling (required by freetype node)
+// Makes modifier which sets the value for property. If value is not here, it should be passed on calling (required by freetype and standard node)
 function set(prop, value) {
   if (value === null)
     return function (obj, value) {

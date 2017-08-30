@@ -39,6 +39,7 @@
       
 -&gt; protocol = 'https'
 -&gt; #http = { protocol = 'http' }
+-&gt; #h = { host = _ }
 
 '$news'
   '$yandex' -&gt; host = 'news.yandex.ru'
@@ -111,7 +112,7 @@
 'o$xford dictionary' -&gt; { host = 'en.oxforddictionaries.com'; path = 'definition' }
   freetype -&gt; path /= _
 
-'google' -> { host = 'google.com'; path = 'search' }
+'google' -&gt; { host = 'google.com'; path = 'search' }
   freetype -&gt; param('q', _)
         </div>
       </div>
