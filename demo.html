@@ -1,0 +1,330 @@
+<!doctype html>
+<html>
+<head>
+  <title>Welcome to the crew!</title>
+  <script src="scripts/libs/jquery.js"></script>
+  <script src="scripts/common.js"></script>
+  <script src="scripts/libs/ace.js"></script>
+  <script src="scripts/history.js"></script>
+  <script src="scripts/complex-expr.js"></script>
+  <script src="scripts/parser.js"></script>
+  <script src="scripts/qnav.js"></script>
+  <link href="main.css" rel="stylesheet" />
+  <link rel="shortcut icon" href="favicon.ico">
+</head>
+<body>
+  <div id="wrapper">
+    <div id="header">
+      <h1>&#9875; Quick Navigation Club</h1>
+      <input id="editScriptBtn" class="btn" type="button" value="Edit Script" onclick="onEditScript()" />
+      <div id="scriptEditButtons">
+        <input id="cancelBtn" class="btn" type="button" value="Cancel" onclick="onCancel()" />
+        <input id="saveScriptBtn" type="button" class="btn" value="Save" onclick="onSaveScript()" />
+      </div>
+    </div>
+    <div id="content">
+      <div id="treeWrapper">
+        <div id="qnav-url"></div>
+        <div>
+          <div id="passedElements"></div>
+          <div id="possibleElements"></div>
+        </div>
+        <div>
+          <input id="qnav-input" type="text" autocomplete="off" oninput="ontype(this.value)" />
+          <div id="ribbon"></div>
+        </div>
+      </div>
+      <div id="scriptWrapper" style="display: none">
+        <div id="script">
+
+-&gt; protocol = 'https'
+-&gt; #http = { protocol = 'http' }
+-&gt; #h = { host = _ }
+
+'ama$zon' -&gt; host = 'www.amazon.com'
+  freetype:buyings -&gt; { path = 's'; param('field-keywords', _) }
+
+'$2gis' -&gt; host = '2gis.ru'
+  '$jam' -&gt; param('queryState', 'center%2F30.324154%2C59.975588%2Fzoom%2F13%2Ftraffic')
+  freetype -&gt; path = 'spb/search' / _
+
+'$news' -&gt; host = 'news.yandex.ru'
+  '$meduza' -&gt; host = 'meduza.io'
+  '$bbc' -&gt; host = 'bbc.com'
+  '$cnn' -&gt; host = 'cnn.com'
+  '$rbc' -&gt; {#http(); host = 'www.rbc.ru'}
+  '$lenta' -&gt; host = 'lenta.ru'
+  'www.$fontanka.ru' -&gt; #h()
+  '$varlamov.ru' -&gt; #h()
+  
+'$vk' -&gt; host = 'vk.com'
+  '$messages' -&gt; path = 'im'
+    freetype -&gt; param('q', _)
+
+'yandex mar$ket' -&gt; host = 'market.yandex.ru'
+  freetype -&gt; { path = 'search'; param('text', _) }
+  
+'$hh' -&gt; host = 'hh.ru'
+  freetype(';') -&gt; { path = 'search/vacancy'; param('text', _)}
+    '$where'
+      '$spb' -&gt; param('area', '2')
+      '$msk' -&gt; param('area', '1')
+
+'w$eather' -&gt; { host = 'www.gismeteo.ru'; path = 'weather-sankt-peterburg-4079/10-days'; }
+  'in $krasnoyarsk' -&gt; path = 'weather-krasnoyarsk-4674/10-days'
+  '$mayskaya' -&gt; path = 'weather-dobromyslovsky-157159/10-days'
+
+// Music
+'$music'
+  '$groove' -&gt; { #http(); host = 'groovemp3.com' }
+    '$artist' -&gt; path = 'artist'
+      freetype -&gt; path /= _
+    '$search' -&gt; path = 'search'
+      freetype -&gt; path /= _
+  '$vk' -&gt; { host = 'vk.com'; path = 'audio' }
+    freetype -&gt; param('q', _)
+
+'$m$aps' -&gt; host = 'maps.google.com'
+  freetype -&gt; path = 'maps/place' / _
+
+// Instagram
+'$instagram' -&gt; host = 'instagram.com'
+  'by $nickname'
+    freetype -&gt; path = _
+  'by $tag'
+    freetype -&gt; path = 'explore/tags' / _
+
+'$youtube' -&gt; host = 'youtube.com'
+  freetype -&gt; { path = 'results'; param('search_query', _) }
+
+'$o$xford dict' -&gt; { host = 'en.oxforddictionaries.com'; path = 'definition' }
+  freetype -&gt; path /= _
+
+//'$go to'
+//  freetype -&gt; host = _
+
+'$search'
+  '$images'
+    'on $google' -&gt; {host = 'google.com'; param('tbm', 'isch'); param('sa', 'X')}
+      freetype -&gt; {path = 'search'; param('q', _)}
+  'on $google' -&gt; host = 'google.com'
+    freetype -&gt; {path = 'search'; param('q', _)}
+  'on $yandex' -&gt; host = 'yandex.ru'
+    freetype -&gt; {path = 'search'; param('text', _) }
+  'on $duckduckgo' -&gt; host = 'duckduckgo.com'
+    freetype -&gt; param('q', _)
+    
+'stack$overflow' -&gt; { #http(); host = 'stackoverflow.com'; str = ''; }
+  '$jobs' -&gt; path = 'jobs'
+    and
+      '$where'
+        freetype -&gt; param('l', _)
+      '$query'
+        freetype -&gt; param('q', _)
+  freetype(';') -&gt; str += _
+    and
+      '$tab'
+        '$frequency' -&gt; param('tab', 'frequent')
+        '$votes' -&gt; param('tab', 'votes')
+        '$active' -&gt; param('tab', 'active')
+      '$java$script'      -&gt; str += '[javascript]'
+      '$j$query'          -&gt; str += '[jquery]'
+      '$java'             -&gt; str += '[java]'
+      '$algorithm'        -&gt; str += '[algorithm]'
+      '$c#'               -&gt; str += '[csharp]'
+      '$scala'            -&gt; str += '[scala]'
+      '$golang'           -&gt; str += '[golang]'
+      '$python'           -&gt; str += '[python]'
+      'other tag$:'
+        freetype(';') -&gt; str += '[' + _ + ']'
+    then
+      'final' -&gt; { path = 'search'; param('q', str) }
+  
+// Google Translate
+// tr/gegenau
+'$t$ranslate' -&gt; host = 'translate.google.com'
+  '$/'
+    or
+      'from $russian'   -&gt; anchor = 'ru'
+      'from $english'   -&gt; anchor = 'en'
+      'from $spanish'   -&gt; anchor = 'es'
+      'from $german'    -&gt; anchor = 'de'
+      'from $french'    -&gt; anchor = 'fr'
+      '$autodetect'     -&gt; anchor = 'auto'
+      'from $ukrainian' -&gt; anchor = 'uk'
+    then
+      or
+        'to $russian'   -&gt; anchor /= 'ru'
+        'to $english'   -&gt; anchor /= 'en'
+        'to $spanish'   -&gt; anchor /= 'es'
+        'to $german'    -&gt; anchor /= 'de'
+        'to $french'    -&gt; anchor /= 'fr'
+        'to $ukrainian' -&gt; anchor /= 'uk'
+      then
+        freetype -&gt; anchor /= _
+  freetype -&gt; anchor = 'en' / 'ru' / _
+
+'$s$lang' -&gt; { #http(); host = 'www.urbandictionary.com' }
+  freetype -&gt; { path = 'define.php'; param('term', _) }
+
+'$github' -&gt; { host = 'github.com'; path = 'pyanzin' }
+  or
+    '$qnav' -&gt; path /= _
+    '$z' -&gt; path /= _
+    '$interpreter' -&gt; path /= _
+    '$uds' -&gt; path /= _
+    'ud$s-ui' -&gt; path /= _
+  then
+    '$issues' -&gt; path /= 'issues'
+      '$new' -&gt; path /= 'new'
+    '$commits' -&gt; path /= 'commits/master'
+    '$search' -&gt; path /= 'search'
+      freetype -&gt; param('q', _)
+      
+'$wikipedia' -&gt; {host = '{lang}.wikipedia.org'; lang = 'en'; term = ''}
+  and
+    '$language'
+      '$russian' -&gt; lang = 'ru'
+      '$english' -&gt; lang = 'en'
+    '$term'
+      -&gt; path = 'wiki/{term}'
+      freetype(';') -&gt; term = _
+    '$search'
+      freetype(';') -&gt; {path = 'w/index.php'; param('search', _)}
+  then
+    'params'
+      -&gt; host = replace(host, '{lang}', lang)
+      -&gt; term = replace(term, ' ', '_')
+      -&gt; path = replace(path, '{term}', term) 
+
+'$binder cloud'
+  -&gt; #paging = {param('pagesize', '20'); param('pageindex', '1')}
+  -&gt; #unpaging = {unparam('pagesize'); unparam('pageindex')}
+  or
+    '$local' -&gt; { #http(); host = 'localhost:27098' }
+    '$production' -&gt; host = 'production.xxxxxxxxxx.com'
+    '$uat'        -&gt; host = 'uat.xxxxxxxxxx.com'
+    '$test'       -&gt; host = 'test.xxxxxxxxxx.com'
+    '$realtime'   -&gt; host = 'realtime.xxxxxxxxxx.com'
+    '$dev'        -&gt; host = 'dev.xxxxxxxxxx.com'
+    'local t$est' -&gt; { #http(); host = 'xxxxxxxxx.xxxxxxxxx.ru' }
+  then 
+    '$contracts' -&gt; { path = 'Contract'; #paging() }
+      '$add' -&gt; { path /= 'Add'; #unpaging() }
+      'by $id' -&gt; { path /= 'View'; #unpaging() }
+        freetype -&gt; path /= _
+      '$name'
+        freetype(';') -&gt; { param('name', _); #paging() }
+    or
+      'document $queue' -&gt; path = 'DocumentQueue'
+      '$xml queue' -&gt; path = 'DocumentQueue/XmlMain'
+    then
+      and
+        '$contract name/umr'
+          freetype(';') -&gt; param('contractname', _)
+        '$document name'
+          freetype(';') -&gt; param('documentname', _)
+        'document $type'
+          '$risk' -&gt; param('documenttypeid', '1')
+          '$premium' -&gt; param('documenttypeid', '2')
+          '$claim' -&gt; param('documenttypeid', '3')
+      then
+        'paging' -&gt; #paging()
+        
+    '$documents' -&gt; path = 'Document'
+      'by $id'
+        freetype -&gt; path /= _
+        
+    '$flexible $entities' -&gt; path = 'FlexibleEntity'
+      '$name'
+        freetype -&gt; {#paging(); param('name', _)}
+      '$display name' -&gt; #paging()
+        freetype -&gt; param('displayname', _)
+      '$add' -&gt; path /= 'Add'
+      
+    '$mappings' -&gt; path = 'Mapping'
+      '$add' -&gt; path /= 'Add'
+      '$name'
+        freetype -&gt; { param('name', _); #paging() }
+        
+    '$tps' -&gt; path = 'TradingPartner'
+      'by $name'
+        freetype -&gt; { #paging(); param('name', _) }
+      '$add' -&gt; path /= 'Add'
+      'by $id' -&gt; path /= 'View'
+        freetype -&gt; path /= _
+  
+    or
+      '$risks' -&gt; { path = 'Risk'; #paging() }
+      '$premiums' -&gt; { path = 'Premium'; #paging() }
+      'c$laims' -&gt; { path = 'Claim'; #paging() }
+    then
+      and
+        '$contract'
+          freetype(';') -&gt; param('contract', _)
+        '$name'
+          freetype(';') -&gt; param('policyreference', _)
+    
+    'c$atastrophe' -&gt; path = 'Catastrophe'
+    'administratio$n' -&gt; path = 'Administration'
+    'r$eports' -&gt; { path = 'Report/Builder'; #paging() }
+      '$default' -&gt; { path = 'Report/BuildReport'; param('contractid', '20509'); #unpaging() }
+  
+'$default BC' -&gt; { #http(); host = 'localhost:17018' }
+  '$contract' -&gt; path = 'Contract/Edit/16478'
+  '$doc upload' -&gt; { path = 'Document/Bordereaux'; param('contractId', '16478') }
+  '$risk mapping' -&gt; path = 'Mapping/Edit/8131'
+  '$premium mapping' -&gt; path = 'Mapping/Edit/7127'
+  'c$laim mapping' -&gt; path = 'Mapping/Edit/7126'
+  'd$wh' -&gt; path = 'TradingPartner/Edit/31'
+  'dwh l$og' -&gt; path = 'WarehouseExportLog' 
+  
+'$mapping studio'
+  '$local' -&gt; { #http(); host = 'localhost:58233' }
+  
+'$admin cloud'
+  or
+    '$local' -&gt; { #http(); host = 'localhost:8005' }
+  then
+    '$catastrophes' -&gt; path = 'Catastrophe'
+    '$flexible entities' -&gt; path = 'FlexibleEntity'
+
+'$portal' -&gt; host = 'xxxxxxxxxx.com'
+  or
+    '$uat' -&gt; host = 'xxxxxx.xxxxxxxxx.com'
+  then
+    '$approval' -&gt; path = 'Approval'
+    '$flexible $entities' -&gt; path = 'FlexibleEntity'
+    
+'shitty $Music' -&gt; host = 'youtube.com'
+  '$devil in i' -&gt; { path = 'watch'; param('v', 'XEEasR7hVhA') }
+
+'$jira' -&gt; { #http(); host = 'xxxxxxx.xxxxx.azure.com:8080'; path = 'secure/Dashboard.jspa'}
+  '$new issue' -&gt; path = 'secure/CreateIssue!default.jspa'
+  '$bc' -&gt; path = 'browse/BC-'
+    freetype -&gt; path += _
+  'b$oard' -&gt; path = 'secure/RapidBoard.jspa'
+    
+'$fish eye' -&gt; {#http(); host = 'xxxxxxx.xxxx.azure.com:8060'}
+  '$graph' -&gt; path = 'graph/BinderCloud'
+    '$admin cloud' -&gt; path = 'graph/AdminCloud'
+    
+'bc b$uild' -&gt; { host = 'xxxxxxxx.xxxxxxxxxxxxx.com'; path = 'xxxxxxxx/_build' }
+
+'ha$rvest' -&gt; { host = 'xxxxxx.xxxxxxxxxx.com'; path = 'time/week' }
+    
+'google'
+  freetype -&gt; {host = 'google.com'; path = 'search'; param('q', _)}   
+  freetype -&gt; param('q', _)
+        </div>
+      </div>
+    </div>
+    <div id="footer">
+      <span>About</span>
+      <span>GitHub</span>
+      <span>Language Reference</span>
+    </div>
+  </div>
+
+</body>
+</html>
