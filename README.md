@@ -1,4 +1,4 @@
-Web navigation language, check it here: https://pyanzin.github.io/qnav
+Web navigation language, you can check the demo here: https://pyanzin.github.io/qnav
 
 ``` javascript
 // Google Translate
