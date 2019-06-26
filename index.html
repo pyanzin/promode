@@ -77,19 +77,19 @@
 
 '$search'
   '$images'
-    'on $google' -&gt; { host = 'google.com'; param('tbm', 'isch'); param('sa', 'X') }
+    'at $google' -&gt; { host = 'google.com'; param('tbm', 'isch'); param('sa', 'X') }
       freetype -&gt; { path = 'search'; param('q', _) }
-  'on $google' -&gt; host = 'google.com'
+  'at $google' -&gt; host = 'google.com'
     freetype -&gt; { path = 'search'; param('q', _) }
-  'on $yandex' -&gt; host = 'yandex.ru'
+  'at $yandex' -&gt; host = 'yandex.ru'
     freetype -&gt; { path = 'search'; }
-  'on $duckduckgo' -&gt; host = 'duckduckgo.com'
+  'at $duckduckgo' -&gt; host = 'duckduckgo.com'
     freetype -&gt; param('q', _)
-  'on stack$overflow' -&gt; { #http(); host = 'stackoverflow.com' }
+  'at stack$overflow' -&gt; { #http(); host = 'stackoverflow.com' }
     freetype -&gt; { path = 'search'; param('q', _) }
 
 // Google Translate
-// trgegenau
+// tgegenau
 '$translate' -&gt; host = 'translate.google.com'
   or
     'from $russian' -&gt; anchor = 'ru'
